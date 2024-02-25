@@ -944,15 +944,15 @@ class MCVSPHSolver(SPHBase):
         self.compute_delta_omega_for_monte_carlo_samples()
         self.compute_velocity_compensation_monte_carlo()
 
-    def substep(self):
+    def substep(self):#zxc
         self.compute_densities()
         self.compute_DFSPH_factor()
         self.divergence_solve()
         self.compute_non_pressure_forces()
         if self.enable_mpsph:
-            self.micropolar_solve()
+            self.micropolar_solve()#zxc
         elif self.enable_vrsph:
-            self.compute_delta_vorticity_for_sph_particles()
+            self.compute_delta_vorticity_for_sph_particles()#zxc 即涡度偏差。算出来以后转换成速度
             self.vrsph()
         elif self.enable_mcvsph:
             self.compute_delta_vorticity_for_sph_particles()

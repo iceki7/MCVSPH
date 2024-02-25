@@ -260,7 +260,7 @@ class SPHBase:
                 self.enforce_boundary_3D(self.ps.material_solid)
 
 
-    def step(self):
+    def step(self):#zxc
         self.ps.initialize_particle_system()
         self.compute_moving_boundary_volume()
         self.substep()
