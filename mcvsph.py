@@ -8,7 +8,12 @@ import time
 class MCVSPHSolver(SPHBase):
     def __init__(self, particle_system):
         super().__init__(particle_system)
-        self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles
+        #prm
+        self.save_velocity=True
+        self.save_vorticity=True
+        self.save_color=False
+
+        self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles zxc
         self.show_curl_color = True
         self.show_sample_color = False
         self.exponent = 7.0
@@ -404,7 +409,7 @@ class MCVSPHSolver(SPHBase):
                 self.ps.vorticity_eva[p_i] = v_curl
                 self.curl_color(v_curl, color_vis_curl)
                 self.ps.particle_color[p_i] = ti.math.clamp(
-                    color_base + color_vis_curl, 0.1, 1.0)
+                    color_base + color_vis_curl, 0.1, 1.0)#zxc
                 # self.particle_color[p_i] = ti.Vector([
                 #     0.1, 0.1, 1.0])
             # elif not self.ps.is_in_dynamic_area[p_i]:

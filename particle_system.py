@@ -234,7 +234,7 @@ class ParticleSystem:
     def build_solver(self):
         solver_type = self.cfg.get_cfg("simulationMethod")
         if solver_type == 1:
-            return MCVSPHSolver(self)
+            return MCVSPHSolver(self)#zxc
         else:
             raise NotImplementedError(f"Solver type {solver_type} has not been implemented.")
 
