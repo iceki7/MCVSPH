@@ -20,7 +20,7 @@ class ParticleSystem:
         self.domain_end = np.array([1.0, 1.0, 1.0])
         self.domian_end = np.array(self.cfg.get_cfg("domainEnd"))
         
-        self.domain_size = self.domian_end - self.domain_start
+        self.domain_size = self.domian_end - self.domain_start #zxc
 
         self.dim = len(self.domain_size)
         assert self.dim > 1
@@ -41,7 +41,7 @@ class ParticleSystem:
         self.particle_num = ti.field(int, shape=())
 
         # Grid related properties
-        self.grid_size = self.support_radius
+        self.grid_size = self.support_radius #zxc
         self.grid_num = np.ceil(self.domain_size / self.grid_size).astype(int)
         self.flattened_grid_num = self.grid_num[0] * self.grid_num[1] * self.grid_num[2]
         print("grid size: ", self.grid_num)

@@ -152,6 +152,7 @@ class SPHBase:
         for p_i in ti.grouped(self.ps.x):
             if self.ps.material[p_i] == particle_type and self.ps.is_dynamic[p_i]:
                 pos = self.ps.x[p_i]
+                #zxcBC 如何根据碰撞求法向量 domain_size
                 collision_normal = ti.Vector([0.0, 0.0, 0.0])
                 if pos[0] > self.ps.domain_size[0] - self.ps.padding:
                     collision_normal[0] += 1.0
@@ -250,6 +251,7 @@ class SPHBase:
             for r_obj_id in self.ps.object_id_rigid_body:
                 R = self.solve_constraints(r_obj_id)
 
+                #zxc 刚体部分
                 if self.ps.cfg.get_cfg("exportObj"):
                     # For output obj only: update the mesh
                     cm = self.compute_com_kernel(r_obj_id)

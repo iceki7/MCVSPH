@@ -13,6 +13,7 @@ class MCVSPHSolver(SPHBase):
         self.save_vorticity=True
         self.save_color=False
 
+        #swi
         self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles zxc
         self.show_curl_color = True
         self.show_sample_color = False
@@ -287,6 +288,7 @@ class MCVSPHSolver(SPHBase):
         # Update position
         for p_i in ti.grouped(self.ps.x):
             if self.ps.is_dynamic[p_i]:
+                #zxc 动态刚体
                 if self.ps.is_dynamic_rigid_body(p_i):
                     self.ps.v[p_i] += self.dt[None] * self.ps.acceleration[p_i]
                 self.ps.x[p_i] += self.dt[None] * self.ps.v[p_i]
@@ -927,6 +929,8 @@ class MCVSPHSolver(SPHBase):
         # Start solver
         avg_density_err = 0.0
 
+
+        #zxc 隐式迭代控制密度偏差
         while m_iterations < 1 or m_iterations < self.m_max_iterations:
             avg_density_err = self.pressure_solve_iteration()
             # Max allowed density fluctuation

@@ -69,6 +69,7 @@ if __name__ == "__main__":
     # Draw the lines for domain
     x_max, y_max, z_max = config.get_cfg("domainEnd")
     box_anchors = ti.Vector.field(3, dtype=ti.f32, shape = 8)
+    #zxc 这个就可以当作法向量
     box_anchors[0] = ti.Vector([0.0, 0.0, 0.0])
     box_anchors[1] = ti.Vector([0.0, y_max, 0.0])
     box_anchors[2] = ti.Vector([x_max, 0.0, 0.0])
@@ -106,6 +107,7 @@ if __name__ == "__main__":
             if cnt % output_interval == 0:
                 window.save_image(f"{scene_name}_output_img/{cnt:06}.png")
         
+        #prm
         if cnt % output_interval == 0:
             if output_ply:
                 obj_id = 0
@@ -113,7 +115,7 @@ if __name__ == "__main__":
                 np_pos = obj_data["position"]
                 writer = ti.tools.PLYWriter(num_vertices=ps.object_collection[obj_id]["particleNum"])
                 writer.add_vertex_pos(np_pos[:, 0], np_pos[:, 1], np_pos[:, 2])
-                writer.export_frame_ascii(cnt_ply, series_prefix.format(0))
+                writer.export_frame_ascii(cnt_ply, series_prefix.format(0))#zxc edit taichi python file
 
                 if solver.save_color:
                     np_color = obj_data["color"]
