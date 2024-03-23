@@ -12,3 +12,9 @@ record_endtime
 
 VS code python cmd
 C:/Users/123/.conda/envs/ev1/python.exe .\run_simulation.py --scene_file .\data\scenes\ball.json
+
+
+【数据内容】
+名称    step数
+lowfluid        0   120     700         每隔4个step输出一帧。
+                0   30      175     

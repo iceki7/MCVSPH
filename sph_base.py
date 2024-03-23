@@ -118,6 +118,8 @@ class SPHBase:
 
     @ti.func
     def simulate_collisions(self, p_i, vec):
+        
+        #zxc
         # Collision factor, assume roughly (1-c_f)*velocity loss after collision
         c_f = 0.5
         self.ps.v[p_i] -= (
