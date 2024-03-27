@@ -19,6 +19,8 @@ if __name__ == "__main__":
     config = SimConfig(scene_file_path=scene_path)
     scene_name = scene_path.split("/")[-1].split(".")[0]
 
+    scene_name ="lowfluid"  #prm
+
     record_time = config.get_cfg("record_endTime")
     solid_num = config.get_cfg("solid_number")
     fluid_num = config.get_cfg("fluid_number")
