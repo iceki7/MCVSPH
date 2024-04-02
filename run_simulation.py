@@ -18,8 +18,11 @@ if __name__ == "__main__":
     scene_path = args.scene_file
     config = SimConfig(scene_file_path=scene_path)
     scene_name = scene_path.split("/")[-1].split(".")[0]
-
-    scene_name ="lowfluid"  #prm
+    
+    #zxc add
+    scene_name = scene_path.split("\\")[-1].split(".")[0]
+    print('[scene name]\t')
+    print(scene_name)
 
     record_time = config.get_cfg("record_endTime")
     solid_num = config.get_cfg("solid_number")
