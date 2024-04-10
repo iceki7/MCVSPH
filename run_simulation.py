@@ -156,4 +156,8 @@ if __name__ == "__main__":
                         f.write(e)
             cnt_ply += 1
         cnt += 1
+
+        #zxc add prm
+        if(cnt==1000):
+            exit(0)
         window.show()

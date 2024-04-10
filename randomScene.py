@@ -21,6 +21,15 @@ def get1(file,idx):
     ds=data["Configuration"]["domainStart"]
     de=data["Configuration"]["domainEnd"]
 
+    #基于baseScene进行微调。
+    #1  随机设置容器大小
+    #2  fluid放置在容器中心
+    #3  随机移动容器
+    #4  如果碰到边界，截断
+
+    #生成法向量
+    #估计粒子数量
+    
 
 
     for dim in range(0,3):
@@ -55,7 +64,7 @@ def get1(file,idx):
             data["FluidBlocks"][0]["start"][dim]=ds[dim]+0.1-data["FluidBlocks"][0]["translation"][dim]
 
 
-
+    #估计粒子数量
     partnum=1
     for dim in range(0,3):
         partnum*=(
