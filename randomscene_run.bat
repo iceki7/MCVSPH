@@ -1,7 +1,11 @@
 @echo off
+@REM run random scenejson
+
+@REM prm
 set name=lowfluid-S-r
-set start=10
-set end=13
+set start=39
+set end=100
+
 @REM for /l %%i in (1,1,5) do (echo %%i) 
 @REM echo  %name%FFF
 @REM pause

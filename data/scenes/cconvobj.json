@@ -1,0 +1,54 @@
+{
+	"Configuration": 
+	{
+        "domainStart": [0.0, 0.0, 0.0],
+        "domainEnd": [10, 8.0, 5.0],
+		"particleRadius": 0.025,
+		"numberOfStepsPerRenderUpdate": 1,
+		"density0": 1000, 
+		"simulationMethod": 1,
+		"gravitation": [0.0, -9.81, 0.0],
+		"timeStepSize": 0.004,
+		"stiffness": 50000,
+		"exponent": 7,
+		"boundaryHandlingMethod": 0,
+		"exportFrame": false,
+		"exportPly": false,
+		"exportObj": false,
+		"cameraPos":[4.0, 3.5, 4.0],
+		"cameraLookAt":[3.0, 0.0, 0.0],
+		"cameraUp":[0.0, 1.0, 0.0],
+		"pointLightPos":[11.0, 2.0, 2.0],
+		"is_propeller": false,
+		"solid_number": 1,
+		"record_endTime": 12,
+		"invisibleObjects":[1]
+	},
+	"FluidBlocks": [
+		{
+            "objectId": 0,
+			"start": [2.5, 0.75, 1.0],
+			"end": [3.5, 1.6, 1.9],
+			"translation": [0.0, 0.0, 0.0],
+			"scale": [1, 1, 1],
+			"velocity": [0.0, 0.0, 0.0],
+			"density": 1000.0,
+			"color": [50, 100, 200]
+		}
+	],
+
+	"RigidBodies": [
+		{
+            "objectId": 1,
+			"geometryFile": "D:/CODE/CCONV/DeepLagrangianFluids/datasets/models/Box_003.obj",
+			"translation": [3.0, 0.2, 1.3],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 0,
+			"scale": [1, 1, 1],
+			"velocity": [0.0, 0.0, 0.0],
+			"density": 1000.0,
+			"color": [255, 255, 255], 
+			"isDynamic": false
+		}
+	]
+}

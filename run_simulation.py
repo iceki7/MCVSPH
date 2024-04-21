@@ -8,6 +8,8 @@ import time
 
 ti.init(arch=ti.gpu, device_memory_fraction=0.5,debug=False,random_seed=int(time.time()),kernel_profiler=False)
 
+prm_nosim=1
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='SPH Taichi')
@@ -92,10 +94,17 @@ if __name__ == "__main__":
 
     cnt = 0
     cnt_ply = 0
-  
-    while window.running:
+
+    if(prm_nosim):
         for i in range(substeps):
             solver.step()
+
+    while window.running:
+
+        if(prm_nosim==0):
+            for i in range(substeps):
+                solver.step()
+
         ps.copy_to_vis_buffer(invisible_objects=invisible_objects)
         if ps.dim == 2:
             canvas.set_background_color(background_color)
@@ -155,9 +164,12 @@ if __name__ == "__main__":
                         e = ps.object_collection[r_body_id]["mesh"].export(file_type='obj')
                         f.write(e)
             cnt_ply += 1
-        cnt += 1
 
-        #zxc add prm
-        if(cnt==1000):
-            exit(0)
+        if(prm_nosim==0):
+            cnt += 1
+
+        #prm
+        #if(cnt==1000): #lowfluid
+        # if(cnt==2000):
+        #     exit(0)
         window.show()

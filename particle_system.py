@@ -6,6 +6,12 @@ from config_builder import SimConfig
 from mcvsph import MCVSPHSolver
 from scan_single_buffer import parallel_prefix_sum_inclusive_inplace
 
+
+prm_debug=0
+prm_npyrigid=1
+prm_cconvscene=9
+prm_hollowrigid=1
+
 @ti.data_oriented
 class ParticleSystem:
     def __init__(self, config: SimConfig, GGUI=False):
@@ -499,6 +505,23 @@ class ParticleSystem:
     
     def load_rigid_body(self, rigid_body):
         obj_id = rigid_body["objectId"]
+
+        if(prm_npyrigid):
+            voxelized_points_np=np.load(rigid_body["geometryFile"]+"/Box_{0:03d}.npy".format(prm_cconvscene))   
+            print(rigid_body["translation"])
+            print(np.max(voxelized_points_np))
+            print(np.min(voxelized_points_np))
+            print(voxelized_points_np.shape)
+            for d in [0,1,2]:
+                voxelized_points_np[:,d]+=rigid_body["translation"][d]
+
+            print(f"rigid body {obj_id} num: {voxelized_points_np.shape[0]}")
+
+
+            #know
+
+            return voxelized_points_np
+
         mesh = tm.load(rigid_body["geometryFile"])
         mesh.apply_scale(rigid_body["scale"])
         offset = np.array(rigid_body["translation"])
@@ -518,9 +541,17 @@ class ParticleSystem:
             # print("Is the mesh successfully repaired? ", is_success)
         voxelized_mesh = mesh.voxelized(pitch=self.particle_diameter)
         voxelized_mesh = mesh.voxelized(pitch=self.particle_diameter).fill()
-        # voxelized_mesh = mesh.voxelized(pitch=self.particle_diameter).hollow()
-        # voxelized_mesh.show()
+        #know mesh to voxelize
+        
+        if(prm_hollowrigid):
+            voxelized_mesh = mesh.voxelized(pitch=self.particle_diameter).hollow()
+            # bn=voxelized_mesh.vertex_normals()
+
         voxelized_points_np = voxelized_mesh.points
+        if(prm_debug):
+            print('[show voxel]')
+            voxelized_mesh.show()
+            exit(0)
         print(f"rigid body {obj_id} num: {voxelized_points_np.shape[0]}")
         
         return voxelized_points_np
