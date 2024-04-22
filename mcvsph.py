@@ -13,8 +13,10 @@ class MCVSPHSolver(SPHBase):
         self.save_vorticity=True
         self.save_color=False
 
-        #swi
-        self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles zxc
+        #prm
+        self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles
+
+
         self.show_curl_color = True
         self.show_sample_color = False
         self.exponent = 7.0
@@ -429,6 +431,8 @@ class MCVSPHSolver(SPHBase):
                                           curl_v: ti.template()):
         x_i = self.ps.x[p_i]
         x_j = self.ps.x[p_j]
+        
+        #zxc 涡度计算公式
         if self.ps.material[p_j] == self.ps.material_fluid:
             curl_v += self.ps.m_V[p_j] * (
                 self.ps.v[p_j] - self.ps.v[p_i]).cross(

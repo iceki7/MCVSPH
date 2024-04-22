@@ -5,16 +5,18 @@ from boxNorm import zxcboxandnorm
 from config_builder import SimConfig
 import json
 import os
+
 np.random.seed(1234)
 
 
 
-# 如果碰到边界，那就截断
 
 
 
+avpartnum=0
 def get1(file,idx):
-
+    
+    global avpartnum
     with open("./data/scenes/"+baseScene, 'r') as file:
         data = json.load(file)
 
@@ -72,6 +74,7 @@ def get1(file,idx):
                 data["FluidBlocks"][0]["start"][dim])/  \
                     (2*data["Configuration"]["particleRadius"])+1
     print('[parnum]\t'+str(partnum))
+    avpartnum+=partnum
 
 
 
@@ -80,7 +83,7 @@ def get1(file,idx):
         json.dump(data, file,indent=4)
 
 
-
+    
     
     boxp,boxn=zxcboxandnorm(
         lb=np.array(ds),
@@ -90,9 +93,15 @@ def get1(file,idx):
     np.save("randomScene/bn-"+baseScene.split(".")[0]+"-r"+str(idx),boxn)
 
 
-num=10
-baseScene="lowfluid.json"
+num=100
+baseScene="lowfluid.json"#prm
 
+baseScene="lowfluid-S.json"#prm
+
+#zxc 生成随即场景json
 
 for i in range(num):
     get1(baseScene,i)
+
+print('[av part num]')
+print(avpartnum/num)

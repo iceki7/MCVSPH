@@ -3,7 +3,10 @@
 
 @REM prm
 set name=lowfluid-S-r
-set start=39
+set name=cconv-scene-r
+set name=cconv-sceneless-r
+
+set start=0
 set end=100
 
 @REM for /l %%i in (1,1,5) do (echo %%i) 
