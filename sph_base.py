@@ -2,7 +2,7 @@ from matplotlib.pyplot import axis
 import taichi as ti
 import numpy as np
 
-
+prm_npyrigid=1
 @ti.data_oriented
 class SPHBase:
     def __init__(self, particle_system):

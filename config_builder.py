@@ -23,6 +23,12 @@ class SimConfig:
             return self.config["RigidBodies"]
         else:
             return []
+        
+    def get_fluid_models(self):
+        if "FluidModels" in self.config:
+            return self.config["FluidModels"][0]
+        else:
+            return []
     
     def get_rigid_blocks(self):
         if "RigidBlocks" in self.config:

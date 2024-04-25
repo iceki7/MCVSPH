@@ -1,7 +1,7 @@
 {
 	"Configuration": 
 	{
-        "domainStart": [0.0, 0.0, 0.0],
+        "domainStart": [-10.0, -10.0, -10.0],
         "domainEnd": [20, 20.0, 20.0],
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 1,
@@ -40,7 +40,7 @@
 	"RigidBodies": [
 		{
             "objectId": 1,
-			"geometryFile": "D:/CODE/CCONV/DeepLagrangianFluids/datasets/models/Box_003.npy",
+			"geometryFile": "D:/CODE/CCONV/DeepLagrangianFluids/datasets/models",
 			"translation": [3.0, 0.2, 1.3],
 			"rotationAxis": [0, 1, 0],
 			"rotationAngle": 0,
@@ -50,5 +50,28 @@
 			"color": [255, 255, 255], 
 			"isDynamic": false
 		}
-	]
+	],"FluidModels": [
+        {
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "density": 1000.0,
+            "velocity": [
+               0,0,0
+            ],
+            "color": [
+                50,
+                100,
+                200
+            ],
+            "objectId": 2,
+            "particleFile": "fluid0.bgeo"
+        }]
 }

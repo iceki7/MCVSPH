@@ -1,3 +1,4 @@
+import json
 import taichi as ti
 import numpy as np
 import trimesh as tm
@@ -9,14 +10,27 @@ from scan_single_buffer import parallel_prefix_sum_inclusive_inplace
 
 prm_debug=0
 prm_npyrigid=1
-prm_cconvscene=9
+cconvboxid=9
 prm_hollowrigid=1
+
+prm_nosim=0
+prm_fluidmodel=1
+prm_quickexport=1
+#场景id由args决定
+#box id/pos/vel从场景文件夹中读取
+#json选一个固定的就行。需要借用其中的FB的objectId。其他都不需要。
+
+
+trans=[3.0, 0.2, 1.3]
+
 
 @ti.data_oriented
 class ParticleSystem:
-    def __init__(self, config: SimConfig, GGUI=False):
+    def __init__(self, config: SimConfig, GGUI=False,cconvsceneidx=9999):
         self.cfg = config
         self.GGUI = GGUI
+
+        self.cconvsceneidx=cconvsceneidx
 
         self.enable_dynamic_area = self.cfg.get_cfg("dynamicArea")
 
@@ -54,18 +68,27 @@ class ParticleSystem:
         self.padding = self.grid_size
 
         # All objects id and its particle num
-        self.object_collection = dict()
-        self.object_id_rigid_body = set()
-
+        self.object_collection =  dict()
+        self.object_id_rigid_body =set()
+        self.object_id_fluid_model=set()
         #========== Compute number of particles ==========#
         #### Process Fluid Blocks ####
         fluid_blocks = self.cfg.get_fluid_blocks()
+
+        voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
+                            r"D:\CODE\MCVSPH-FORK\csm",idx=cconvsceneidx)
         fluid_particle_num = 0
+        # fluid_particle_num +=voxelized_points_np.shape[0]
+
         for fluid in fluid_blocks:
             particle_num = self.compute_cube_particle_num(fluid["start"], fluid["end"])
+            if(prm_fluidmodel):
+               particle_num= voxelized_points_np.shape[0]
             fluid["particleNum"] = particle_num
+
             self.object_collection[fluid["objectId"]] = fluid
             fluid_particle_num += particle_num
+
 
         #### Process Rigid Blocks ####
         rigid_blocks = self.cfg.get_rigid_blocks()
@@ -75,6 +98,32 @@ class ParticleSystem:
             rigid["particleNum"] = particle_num
             self.object_collection[rigid["objectId"]] = rigid
             rigid_particle_num += particle_num
+
+
+        #### Process Fluid Models ####
+
+        #如果是这个场景，fluid_model已知，就以fluidmodel中第一个物体为准就行
+        if(prm_fluidmodel):
+            fluid_model = self.cfg.get_fluid_models()
+            if(len(fluid_model) ==0):
+                print('ERROR!!!!!!!!![no fm]')
+                exit(0)
+            else:
+                pass
+                # voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
+                #             r"D:\CODE\MCVSPH-FORK\csm",idx=3)
+                # print('[debug 1]')
+                # print(voxelized_points_np.shape)
+                # print(voxelized_vel_np.shape)
+                # print(voxelized_vel_np[100])
+
+                # fluid_model["particleNum"] = voxelized_points_np.shape[0]
+                # fluid_model["voxelizedPoints"] = voxelized_points_np
+                # fluid_model["velocity"] = voxelized_vel_np
+
+
+                # self.object_collection[fluid_model["objectId"]] = fluid_model
+                # fluid_particle_num += voxelized_points_np.shape[0]
         
         #### Process Rigid Bodies ####
         rigid_bodies = self.cfg.get_rigid_bodies()
@@ -91,6 +140,11 @@ class ParticleSystem:
         self.fluid_particle_num = fluid_particle_num
         self.solid_particle_num = rigid_particle_num
         self.particle_max_num = fluid_particle_num + rigid_particle_num
+        print('[STAT]')
+        print(self.fluid_particle_num)
+        print(self.solid_particle_num)
+        print(self.particle_max_num)#43965
+
         self.num_rigid_bodies = len(rigid_blocks)+len(rigid_bodies)
 
         #### TODO: Handle the Particle Emitter ####
@@ -184,6 +238,10 @@ class ParticleSystem:
             end = np.array(fluid["end"]) + offset
             scale = np.array(fluid["scale"])
             velocity = fluid["velocity"]
+
+            print('[RB vel]')
+            print(len(velocity))
+
             density = fluid["density"]
             color = fluid["color"]
             self.add_cube(object_id=obj_id,
@@ -227,6 +285,9 @@ class ParticleSystem:
                 velocity = np.array(rigid_body["velocity"], dtype=np.float32)
             else:
                 velocity = np.array([0.0 for _ in range(self.dim)], dtype=np.float32)
+            print('[RB vel]')
+            print(velocity.shape)
+
             density = rigid_body["density"]
             color = np.array(rigid_body["color"], dtype=np.int32)
 
@@ -244,7 +305,60 @@ class ParticleSystem:
                                is_dynamic * np.ones(num_particles_obj, dtype=np.int32), # is_dynamic
                                np.stack([color for _ in range(num_particles_obj)]),
                                idx_arr) # color
-    
+            
+
+
+        # if(prm_fluidmodel):
+            # obj_id =fluid_model["objectId"]#约定rigidId=0
+            # self.object_id_fluid_model.add(obj_id)
+            # num_particles_obj = fluid_model["particleNum"]
+            # voxelized_points_np = fluid_model["voxelizedPoints"]
+
+
+            # density = fluid_model["density"]
+
+            # is_dynamic = True
+            # velocity = np.array(fluid_model["velocity"], dtype=np.float32)
+            # print('[FM Attrs]')
+            # print(obj_id)
+            # print(num_particles_obj)
+            # posarr=np.array(voxelized_points_np, dtype=np.float32)
+            # print(posarr.shape)
+            # print(velocity.shape)
+            # densarr=density * np.ones(num_particles_obj, dtype=np.float32)
+            # print(densarr.shape)
+            # pressarr=np.zeros(num_particles_obj, dtype=np.float32)
+            # print(pressarr.shape)
+            # materialarr=np.array([self.material_fluid for _ in range(num_particles_obj)], dtype=np.int32)
+            # print(materialarr.shape)
+            # is_dynamicarr=np.full_like(np.zeros(num_particles_obj, dtype=np.int32), 1)
+            # print(is_dynamicarr.shape)
+            # colorarr= np.stack([np.full_like(np.zeros(num_particles_obj, dtype=np.int32), c) for c in fluid_model['color']], axis=1)
+            # print(colorarr.shape)
+            # # exit(0)
+
+
+            # #add
+            # partnum=self.particle_num.to_numpy()
+            # idx_arr = np.arange(partnum,partnum+num_particles_obj) 
+            # print(idx_arr.shape)
+            # # print('[partnum before adding FM]')
+            # # print(partnum)
+            # # print(voxelized_vel_np.shape)
+
+
+            # self.add_particles(obj_id,
+            #                 num_particles_obj,
+            #                 posarr, # position
+            #                 velocity,
+            #                 densarr, # density
+            #                 pressarr, # pressure
+            #                 materialarr, # FLUID 
+            #                 is_dynamic * np.ones(num_particles_obj, dtype=np.int32), # is_dynamic
+            #                 colorarr,
+            #                 idx_arr
+            #                 ) # color
+
 
     def build_solver(self):
         solver_type = self.cfg.get_cfg("simulationMethod")
@@ -353,12 +467,19 @@ class ParticleSystem:
         for I in ti.grouped(self.grid_particles_num):
             self.grid_particles_num[I] = 0
         for I in ti.grouped(self.x):
+            # print(self.x.shape)
             grid_index = self.get_flatten_grid_index(self.x[I])
+            #在粒子重排序的过程中，这是唯一用到坐标的地方，其余的地方都是序号变换
+
             self.grid_ids[I] = grid_index
             ti.atomic_add(self.grid_particles_num[grid_index], 1)
         for I in ti.grouped(self.grid_particles_num):
             self.grid_particles_num_temp[I] = self.grid_particles_num[I]
     
+
+
+    #每个step都要根据粒子位置，重拍它们的物理存储
+    #先把它们放进最近的网格里，然后编号，最后调整物理存储顺序
     @ti.kernel
     def counting_sort(self):
         # FIXME: make it the actual particle num
@@ -427,6 +548,7 @@ class ParticleSystem:
     def initialize_particle_system(self):
         self.update_grid_id()
         self.prefix_sum_executor.run(self.grid_particles_num)
+        #前缀和。  1，2，3转换为1，3，6（即网格中起始粒子的id）
         self.counting_sort()
     
     @ti.func
@@ -496,24 +618,56 @@ class ParticleSystem:
         np_vorticity=np_vorticity2
         
 
+        if(prm_fluidmodel):
+            # print('[dump shape]')
+            # print(np_x.shape)
+            # exit(0)
+            np_x-=trans
+
         return {
             'position': np_x,
             'velocity': np_v,
             'color': np_color,
             'vorticity':np_vorticity
         }
-    
+    def load_fluid_model(self,basedir,idx):
+        # print('idx')
+        # print(idx)
+        # exit(0)
+        voxelized_points_np=np.load((basedir+"/sim_{0:04d}/POS"+".npy").format(int(idx)))
+        voxelized_vels_np=  np.load((basedir+"/sim_{0:04d}/VEL"+".npy").format(int(idx)))
+       
+        print(np.max(voxelized_points_np[:,0]))
+        print(np.max(voxelized_points_np[:,1]))
+        print(np.max(voxelized_points_np[:,2]))
+        print(np.min(voxelized_points_np[:,0]))
+        print(np.min(voxelized_points_np[:,1]))
+        print(np.min(voxelized_points_np[:,2]))
+
+
+        print(f"fluid model num: {voxelized_points_np.shape[0]}")
+        
+        return voxelized_points_np,voxelized_vels_np
+
+
     def load_rigid_body(self, rigid_body):
         obj_id = rigid_body["objectId"]
 
         if(prm_npyrigid):
-            voxelized_points_np=np.load(rigid_body["geometryFile"]+"/Box_{0:03d}.npy".format(prm_cconvscene))   
+            with open("./csm/sim_{0:04d}/scene.json".format(int(self.cconvsceneidx)), "r") as f:
+                cconvboxid = json.load(f)["RigidBodies"][0]["boxid"]
+
+            voxelized_points_np=np.load(rigid_body["geometryFile"]+"/Box_"+cconvboxid+".npy")   
             print(rigid_body["translation"])
-            print(np.max(voxelized_points_np))
-            print(np.min(voxelized_points_np))
+            print(np.max(voxelized_points_np[:,0]))
+            print(np.max(voxelized_points_np[:,1]))
+            print(np.max(voxelized_points_np[:,2]))
+            print(np.min(voxelized_points_np[:,0]))
+            print(np.min(voxelized_points_np[:,1]))
+            print(np.min(voxelized_points_np[:,2]))
             print(voxelized_points_np.shape)
             for d in [0,1,2]:
-                voxelized_points_np[:,d]+=rigid_body["translation"][d]
+                voxelized_points_np[:,d]+=trans[d]
 
             print(f"rigid body {obj_id} num: {voxelized_points_np.shape[0]}")
 
@@ -595,6 +749,19 @@ class ParticleSystem:
             velocity_arr = np.full_like(new_positions, 0, dtype=np.float32)
         else:
             velocity_arr = np.array([velocity for _ in range(num_new_particles)], dtype=np.float32)
+        #
+
+        voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
+                                    r"D:\CODE\MCVSPH-FORK\csm",idx=self.cconvsceneidx)
+        
+
+        if(prm_fluidmodel):
+            for d in [0,1,2]:
+                voxelized_points_np[:,d]+=trans[d]
+            new_positions=voxelized_points_np
+            velocity_arr =voxelized_vel_np
+            num_new_particles=voxelized_points_np.shape[0]
+
 
         #add
         print('[part num]')
@@ -607,4 +774,21 @@ class ParticleSystem:
         color_arr = np.stack([np.full_like(np.zeros(num_new_particles, dtype=np.int32), c) for c in color], axis=1)
         density_arr = np.full_like(np.zeros(num_new_particles, dtype=np.float32), density if density is not None else 1000.)
         pressure_arr = np.full_like(np.zeros(num_new_particles, dtype=np.float32), pressure if pressure is not None else 0.)
+        
+        print('[add part in add_cube VAR]')
+        print(object_id)
+        print(num_new_particles)#N
+        print(new_positions.shape)#N 3
+        print(velocity_arr.shape)#N 3
+        print(density_arr.shape)#N
+        print(pressure_arr.shape)#N
+        print(material_arr.shape)#N
+        print(is_dynamic_arr.shape)#N
+        print(color_arr.shape)#N 3
+        print(idx_arr.shape)#N
+
+
+
+     
+
         self.add_particles(object_id, num_new_particles, new_positions, velocity_arr, density_arr, pressure_arr, material_arr, is_dynamic_arr, color_arr,idx_arr)

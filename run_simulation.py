@@ -3,12 +3,11 @@ import argparse
 import taichi as ti
 import numpy as np
 from config_builder import SimConfig
-from particle_system import ParticleSystem
+from particle_system import ParticleSystem,prm_fluidmodel,prm_nosim,trans,prm_quickexport
 import time
 
 ti.init(arch=ti.gpu, device_memory_fraction=0.5,debug=False,random_seed=int(time.time()),kernel_profiler=False)
 
-prm_nosim=1
 
 
 if __name__ == "__main__":
@@ -16,16 +15,27 @@ if __name__ == "__main__":
     parser.add_argument('--scene_file',
                         default='',
                         help='scene file')
+    parser.add_argument('--cconvsceneidx',
+                        default='9999',#prm
+                        help='scene name')
+
+
     args = parser.parse_args()
     scene_path = args.scene_file
+    cconvsceneidx=args.cconvsceneidx
+
     config = SimConfig(scene_file_path=scene_path)
     scene_name = scene_path.split("/")[-1].split(".")[0]
     
     #zxc add
     scene_name = scene_path.split("\\")[-1].split(".")[0]
+    if(prm_fluidmodel):
+       scene_name="csm_"+str(cconvsceneidx)
+
     print('[scene name]\t')
     print(scene_name)
 
+       
     record_time = config.get_cfg("record_endTime")
     solid_num = config.get_cfg("solid_number")
     fluid_num = config.get_cfg("fluid_number")
@@ -38,17 +48,35 @@ if __name__ == "__main__":
     color_series_prefix = "{}_output/fluid_particle_color_{}.ply".format(scene_name, "{}")
     vorticity_series_prefix = "{}_output/vorticity_object_{}.ply".format(scene_name, "{}")
     velocity_series_prefix = "{}_output/velocity_object_{}.ply".format(scene_name, "{}")
+
+    if(prm_fluidmodel):
+        output_frames=True
+        output_ply=True
+        output_obj=False
+
+
     if output_frames:
         os.makedirs(f"{scene_name}_output_img", exist_ok=True)
     if output_ply:
         os.makedirs(f"{scene_name}_output", exist_ok=True)
 
 
-    ps = ParticleSystem(config, GGUI=True)
+    ps = ParticleSystem(config, GGUI=True,cconvsceneidx=cconvsceneidx)
     solver = ps.build_solver()
     solver.initialize()
 
-    window = ti.ui.Window('SPH', (1024, 1024), show_window = True, vsync=False)
+   
+    if(prm_fluidmodel):
+        solver.save_velocity=True
+        solver.save_vorticity=False
+        solver.save_color=False
+
+
+        
+    if(prm_quickexport):
+        window = ti.ui.Window('SPH', (100, 100), show_window = True, vsync=False)   
+    else:
+        window = ti.ui.Window('SPH', (1024, 1024), show_window = True, vsync=False)
 
     scene = ti.ui.Scene()
     camera = ti.ui.Camera()
@@ -125,6 +153,8 @@ if __name__ == "__main__":
         if cnt % output_interval == 0:
             if output_ply:
                 obj_id = 0
+                if(prm_fluidmodel):
+                    obj_id=0
                 obj_data = ps.dump(obj_id=obj_id)
                 np_pos = obj_data["position"]
                 writer = ti.tools.PLYWriter(num_vertices=ps.object_collection[obj_id]["particleNum"])
@@ -149,7 +179,8 @@ if __name__ == "__main__":
                     writer.add_vertex_pos(np_velocity[:, 0], np_velocity[:, 1], np_velocity[:, 2])
                     writer.export_frame_ascii(cnt_ply, velocity_series_prefix.format(0))
                 
-                if solid_num:
+                if solid_num \
+                    and prm_fluidmodel==0:
                     for i in range(solid_num):
                         obj_id = i+1
                         obj_data = ps.dump(obj_id=obj_id)
@@ -169,7 +200,7 @@ if __name__ == "__main__":
             cnt += 1
 
         #prm
-        #if(cnt==1000): #lowfluid
+        if(cnt==1000): #lowfluid
         # if(cnt==2000):
-        #     exit(0)
+            exit(0)
         window.show()
