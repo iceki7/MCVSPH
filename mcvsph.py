@@ -8,12 +8,12 @@ import time
 class MCVSPHSolver(SPHBase):
     def __init__(self, particle_system):
         super().__init__(particle_system)
-        #prm
+        #prm_
         self.save_velocity=True
         self.save_vorticity=True
         self.save_color=False
 
-        #prm
+        #prm_
         self.turb_mode = 3  ## 0 - DFSPH  1 - VRSPH  2 - micropolar 3 - Monte Carlo vortex particles
 
 

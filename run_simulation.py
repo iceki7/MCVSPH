@@ -30,7 +30,10 @@ if __name__ == "__main__":
     #zxc add
     scene_name = scene_path.split("\\")[-1].split(".")[0]
     if(prm_fluidmodel):
+       #prm_
        scene_name="csm_"+str(cconvsceneidx)
+       scene_name="csm_mp_"+str(cconvsceneidx)
+
 
     print('[scene name]\t')
     print(scene_name)
@@ -50,6 +53,7 @@ if __name__ == "__main__":
     velocity_series_prefix = "{}_output/velocity_object_{}.ply".format(scene_name, "{}")
 
     if(prm_fluidmodel):
+        #prm_
         output_frames=True
         output_ply=True
         output_obj=False
@@ -67,6 +71,7 @@ if __name__ == "__main__":
 
    
     if(prm_fluidmodel):
+        #prm_
         solver.save_velocity=True
         solver.save_vorticity=False
         solver.save_color=False
