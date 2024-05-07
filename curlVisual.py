@@ -1,7 +1,7 @@
 import numpy as np
 import taichi as ti
 
-from plyAddAttribute import plyaddattr
+from plyAddAttribute import plyaddRGB, plyaddattr
 
 ti.init(arch=ti.gpu,
          device_memory_fraction=0.5,
@@ -22,7 +22,7 @@ data=0
 # print(avel.shape)
 
 particlenum=0
-particle_max_num=20000
+particle_max_num=50000
 
 
 
@@ -62,6 +62,10 @@ def loadfile(filename):
     data = np.load(filename)
     avel = data['vel']
     apos = data['pos']
+    # print('[apos]')
+    # print(apos.shape)
+
+
 
     particlenum=apos.shape[0]
     
@@ -140,12 +144,14 @@ class curlvisual:
           
 obj1=curlvisual()
 
-prefix=r"C:\Users\123\Downloads\lowfluidS100_50kexample_scene\\"
+#prm_
+prefix=r"D:\CODE\CCONV RES\csm_mp100_50kexample_long2z+2\\"
 filepre=r"fluid_"
+lv=0
+rv=500
 
 
-
-for i in range(100,1000):
+for i in range(lv,rv):
 
     loadfile((prefix+filepre+'{0:04d}'+r".npz").format(i))
     
@@ -156,23 +162,19 @@ for i in range(100,1000):
     particle_colorn=particle_color.to_numpy()[0:particlenum]
     # print(curlabsn.shape)
 
-    
+    print(particle_colorn.shape)
+
     # plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
     #            curlabsn,
     #            'curlabs')
     
-    plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
-            particle_colorn[:,0],
-            'red')
+    # plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
+    #         particle_colorn[:,0],
+    #         'red')
+    plyaddRGB((prefix+filepre+'{0:04d}'+r".ply").format(i),
+              particle_colorn)
     
-    plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
-            particle_colorn[:,1],
-            'green')
-    
-    plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
-            particle_colorn[:,2],
-            'blue')
-    
+
     if(i%100==0):
         print(str(i)+' done')
 print('[all done]')

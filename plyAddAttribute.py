@@ -31,3 +31,31 @@ def plyaddattr(filename, attrarray,attrname):
     p = PlyData([v], text=True)
 
     p.write(filename)
+
+def plyaddRGB(filename, attrarray):
+    p = PlyData.read(filename)
+    v = p.elements[0]   #v[0] has key x,y,z
+    # print('vx shape')
+    # print(v['x'].shape)
+    # f = p.elements[1] # err
+
+    # print(v.data.dtype.descr)
+    for oriattr in v.data.dtype.descr:
+        if ('red' in oriattr):
+            # print('rgb exsited in '+str(filename))
+            return
+
+    # Create the new vertex data with appropriate dtype
+    a = np.empty(len(v.data), v.data.dtype.descr + [('red', 'f4')]+ [('green', 'f4')]+ [('blue', 'f4')])
+    for name in v.data.dtype.fields:
+        a[name] = v[name]
+    a['red'] =   attrarray[:,0]
+    a['green'] = attrarray[:,1]
+    a['blue'] =  attrarray[:,2]
+    # Recreate the PlyElement instance
+    v = PlyElement.describe(a, 'vertex')
+
+    # Recreate the PlyData instance
+    p = PlyData([v], text=True)
+
+    p.write(filename)

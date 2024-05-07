@@ -61,24 +61,37 @@ image_folder_dir = r"D:\CODE\MCVSPH-FORK\ball-2_output_img\\"
 #     video.write(img)
 
 
+def export1(image_folder_dir,left=0,right=1000,exportname="project.avi"):
+
+    import cv2
+    import numpy as np
+    import glob
+    size=(1024,1024)
+    img_array = []
+    for filename in glob.glob(image_folder_dir+'*.png'):
+        id=filename.split("\\")[-1].split(".")[0]
+        # if(int(id)<520 or int(id)>1114):
+        #     continue
+        img = cv2.imread(filename)
+        height, width, layers = img.shape
+
+        # if(height>981):
+        #     continue
+        size = (width,height)
+        img_array.append(img)
+
+    fps=15
+    out = cv2.VideoWriter(exportname,cv2.VideoWriter_fourcc(*'DIVX'), fps, size)
+    
+    for i in range(len(img_array)):
+        out.write(img_array[i])
+    out.release()
+    print('[done]')
 
 
-import cv2
-import numpy as np
-import glob
-
-img_array = []
-for filename in glob.glob(image_folder_dir+'*.png'):
-    img = cv2.imread(filename)
-    height, width, layers = img.shape
-    if(height>981):
-        continue
-    size = (width,height)
-    img_array.append(img)
-
-fps=15
-out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), fps, size)
- 
-for i in range(len(img_array)):
-    out.write(img_array[i])
-out.release()
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_3_output_img\\",exportname="csm3.avi")
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_4_output_img\\",exportname="csm4.avi")
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_6_output_img\\",exportname="csm6.avi")
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_8_output_img\\",exportname="csm8.avi")
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_9_output_img\\",exportname="csm9.avi")
+export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_10_output_img\\",exportname="csm10.avi")
