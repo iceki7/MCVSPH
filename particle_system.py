@@ -9,16 +9,24 @@ from scan_single_buffer import parallel_prefix_sum_inclusive_inplace
 
 
 prm_debug=0
-prm_npyrigid=1
-cconvboxid=9
+
+#导入npy容器，路径写死。
+from sph_base import prm_npyrigid
+
+#挖空容器，npyrigid=1它无效
 prm_hollowrigid=1
 
 prm_nosim=0
+
+#使用导入的水块模型
 prm_fluidmodel=1
 prm_quickexport=1
-#场景id由args决定
+
+
+#对于使用cconv制定box和fluidmodel的场景：
+#场景id由cmd args决定
 #box id/pos/vel从场景文件夹中读取
-#json选一个固定的就行。需要借用其中的FB的objectId。其他都不需要。
+#json选一个固定的就行。需要借用其中的FluidBlock的objectId。其他都不需要。
 
 
 trans=[3.0, 0.2, 1.3]
@@ -75,15 +83,14 @@ class ParticleSystem:
         #### Process Fluid Blocks ####
         fluid_blocks = self.cfg.get_fluid_blocks()
 
-        voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
-                            r"D:\CODE\MCVSPH-FORK\csm",idx=cconvsceneidx)
         fluid_particle_num = 0
-        # fluid_particle_num +=voxelized_points_np.shape[0]
 
         for fluid in fluid_blocks:
             particle_num = self.compute_cube_particle_num(fluid["start"], fluid["end"])
             if(prm_fluidmodel):
-               particle_num= voxelized_points_np.shape[0]
+                voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
+                    r"D:\CODE\MCVSPH-FORK\cconvConfig\csm",idx=cconvsceneidx)
+                particle_num= voxelized_points_np.shape[0]
             fluid["particleNum"] = particle_num
 
             self.object_collection[fluid["objectId"]] = fluid
@@ -308,56 +315,6 @@ class ParticleSystem:
             
 
 
-        # if(prm_fluidmodel):
-            # obj_id =fluid_model["objectId"]#约定rigidId=0
-            # self.object_id_fluid_model.add(obj_id)
-            # num_particles_obj = fluid_model["particleNum"]
-            # voxelized_points_np = fluid_model["voxelizedPoints"]
-
-
-            # density = fluid_model["density"]
-
-            # is_dynamic = True
-            # velocity = np.array(fluid_model["velocity"], dtype=np.float32)
-            # print('[FM Attrs]')
-            # print(obj_id)
-            # print(num_particles_obj)
-            # posarr=np.array(voxelized_points_np, dtype=np.float32)
-            # print(posarr.shape)
-            # print(velocity.shape)
-            # densarr=density * np.ones(num_particles_obj, dtype=np.float32)
-            # print(densarr.shape)
-            # pressarr=np.zeros(num_particles_obj, dtype=np.float32)
-            # print(pressarr.shape)
-            # materialarr=np.array([self.material_fluid for _ in range(num_particles_obj)], dtype=np.int32)
-            # print(materialarr.shape)
-            # is_dynamicarr=np.full_like(np.zeros(num_particles_obj, dtype=np.int32), 1)
-            # print(is_dynamicarr.shape)
-            # colorarr= np.stack([np.full_like(np.zeros(num_particles_obj, dtype=np.int32), c) for c in fluid_model['color']], axis=1)
-            # print(colorarr.shape)
-            # # exit(0)
-
-
-            # #add
-            # partnum=self.particle_num.to_numpy()
-            # idx_arr = np.arange(partnum,partnum+num_particles_obj) 
-            # print(idx_arr.shape)
-            # # print('[partnum before adding FM]')
-            # # print(partnum)
-            # # print(voxelized_vel_np.shape)
-
-
-            # self.add_particles(obj_id,
-            #                 num_particles_obj,
-            #                 posarr, # position
-            #                 velocity,
-            #                 densarr, # density
-            #                 pressarr, # pressure
-            #                 materialarr, # FLUID 
-            #                 is_dynamic * np.ones(num_particles_obj, dtype=np.int32), # is_dynamic
-            #                 colorarr,
-            #                 idx_arr
-            #                 ) # color
 
 
     def build_solver(self):
@@ -654,7 +611,7 @@ class ParticleSystem:
         obj_id = rigid_body["objectId"]
 
         if(prm_npyrigid):
-            with open("./csm/sim_{0:04d}/scene.json".format(int(self.cconvsceneidx)), "r") as f:
+            with open("./cconvConfig/csm/sim_{0:04d}/scene.json".format(int(self.cconvsceneidx)), "r") as f:
                 cconvboxid = json.load(f)["RigidBodies"][0]["boxid"]
 
             voxelized_points_np=np.load(rigid_body["geometryFile"]+"/Box_"+cconvboxid+".npy")   
@@ -751,11 +708,12 @@ class ParticleSystem:
             velocity_arr = np.array([velocity for _ in range(num_new_particles)], dtype=np.float32)
         #
 
-        voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
-                                    r"D:\CODE\MCVSPH-FORK\csm",idx=self.cconvsceneidx)
+       
         
 
         if(prm_fluidmodel):
+            voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
+                                    r"D:\CODE\MCVSPH-FORK\cconvConfig\csm",idx=self.cconvsceneidx)
             for d in [0,1,2]:
                 voxelized_points_np[:,d]+=trans[d]
             new_positions=voxelized_points_np

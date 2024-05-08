@@ -18,9 +18,9 @@
 @REM for /l %%i in (%start%,1,%end%) do (C:/Users/123/.conda/envs/ev1/python.exe .\run_simulation.py --scene_file .\randomScene\%name%%%i.json) 
 
 
-@REM -----------------cconv scene----------------------
 
+@REM -----------------↓cconv scene↓----------------------
 set name=scene
-set start=41
-set end=100
+set start=151
+set end=200
 for /l %%i in (%start%,1,%end%) do (C:/Users/123/.conda/envs/ev1/python.exe .\run_simulation.py --scene_file .\data\scenes\cconvobjnpy.json --cconvsceneidx %%i) 

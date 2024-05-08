@@ -204,7 +204,7 @@ if __name__ == "__main__":
         if(prm_nosim==0):
             cnt += 1
 
-        #prm
+        #prm_
         if(cnt==1000): #lowfluid
         # if(cnt==2000):
             exit(0)
