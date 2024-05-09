@@ -10,6 +10,7 @@ lv=1
 rv=1000
 prm_exportRGB=1
 prm_exportCurl=0
+prm_colorcase=1
 
 ti.init(arch=ti.gpu,
          device_memory_fraction=0.5,
@@ -131,7 +132,13 @@ class curlvisual:
     @ti.func
     def curl_color(self, v: ti.template(), w: ti.template()):
         v_norm = v.norm()
-        w[0] = -ti.exp(-0.03 * v_norm) + 1
+
+
+        if  (prm_colorcase==0):
+            w[0] = -ti.exp(-0.03 * v_norm) + 1
+        elif(prm_colorcase==1):
+            w[0] = -ti.exp(-0.06 * v_norm) + 1
+
         w[1] = w[0]
 
     @ti.kernel
@@ -179,6 +186,6 @@ for i in range(lv,rv):
                 particle_colorn)
     
 
-    if(i%100==0):
+    if(i%20==0):
         print(str(i)+' done')
 print('[all done]')

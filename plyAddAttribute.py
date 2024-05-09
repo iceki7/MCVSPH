@@ -4,6 +4,8 @@ from plyfile import PlyData, PlyElement
 
 
 #from    https://github.com/dranjan/python-plyfile/issues/26
+prm_overwrite=1
+
 
 def plyaddattr(filename, attrarray,attrname):
     p = PlyData.read(filename)
@@ -38,15 +40,24 @@ def plyaddRGB(filename, attrarray):
     # print('vx shape')
     # print(v['x'].shape)
     # f = p.elements[1] # err
-
+    flag_hasrgb=0
     # print(v.data.dtype.descr)
+
     for oriattr in v.data.dtype.descr:
         if ('red' in oriattr):
+            flag_hasrgb=1
             # print('rgb exsited in '+str(filename))
-            return
+            if(prm_overwrite==0):
+                return
+            
+            break
 
     # Create the new vertex data with appropriate dtype
-    a = np.empty(len(v.data), v.data.dtype.descr + [('red', 'f4')]+ [('green', 'f4')]+ [('blue', 'f4')])
+    if(flag_hasrgb==0):
+        a = np.empty(len(v.data), v.data.dtype.descr + [('red', 'f4')]+ [('green', 'f4')]+ [('blue', 'f4')])
+    else:
+        a = np.empty(len(v.data), v.data.dtype.descr)
+
     for name in v.data.dtype.fields:
         a[name] = v[name]
     a['red'] =   attrarray[:,0]
