@@ -3,6 +3,14 @@ import taichi as ti
 
 from plyAddAttribute import plyaddRGB, plyaddattr
 
+#prm_
+prefix=r"D:\CODE\CCONV RES\csm_mp200_example_long2z+2\\"
+filepre=r"fluid_"
+lv=1
+rv=1000
+prm_exportRGB=1
+prm_exportCurl=0
+
 ti.init(arch=ti.gpu,
          device_memory_fraction=0.5,
          debug=False,
@@ -137,18 +145,14 @@ class curlvisual:
             self.for_all_neighbors(
                 p_i, self.compute_particles_color_curl_task, v_curl)
             # self.ps.vorticity_eva[p_i] = v_curl
-            # self.curlabs=v_curl.norm()
+            if(prm_exportCurl):
+                self.curlabs[p_i]=v_curl.norm()
             self.curl_color(v_curl, color_vis_curl)
             particle_color[p_i] = ti.math.clamp(
                 color_base + color_vis_curl, 0.1, 1.0)
           
 obj1=curlvisual()
 
-#prm_
-prefix=r"D:\CODE\CCONV RES\csm_mp100_50kexample_long2z+2\\"
-filepre=r"fluid_"
-lv=0
-rv=500
 
 
 for i in range(lv,rv):
@@ -158,21 +162,21 @@ for i in range(lv,rv):
 
 
     obj1.compute_particles_color_curl()
-    # curlabsn         =obj1.curlabs.to_numpy()[0:particlenum]
+    if(prm_exportCurl):
+        curlabsn         =obj1.curlabs.to_numpy()[0:particlenum]
+        plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
+                curlabsn,
+                'curlabs')
     particle_colorn=particle_color.to_numpy()[0:particlenum]
     # print(curlabsn.shape)
-
-    print(particle_colorn.shape)
-
-    # plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
-    #            curlabsn,
-    #            'curlabs')
+    # print(particle_colorn.shape)
     
     # plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
     #         particle_colorn[:,0],
     #         'red')
-    plyaddRGB((prefix+filepre+'{0:04d}'+r".ply").format(i),
-              particle_colorn)
+    if(prm_exportRGB):
+        plyaddRGB((prefix+filepre+'{0:04d}'+r".ply").format(i),
+                particle_colorn)
     
 
     if(i%100==0):
