@@ -20,9 +20,12 @@ def plyaddattr(filename, attrarray,attrname):
             print('existed in '+str(filename))
             return
 
+    #如果加属性，仅保留原先的xyz
+    descr_=v.data.dtype.descr[0:3]
+
     # Create the new vertex data with appropriate dtype
-    a = np.empty(len(v.data), v.data.dtype.descr + [(attrname, 'f4')])
-    for name in v.data.dtype.fields:
+    a = np.empty(len(v.data), descr_ + [(attrname, 'f4')])
+    for name in ['x','y','z']:
         a[name] = v[name]
     a[attrname] = attrarray
 

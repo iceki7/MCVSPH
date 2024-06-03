@@ -5,15 +5,37 @@ from plyAddAttribute import plyaddRGB, plyaddattr
 
 #prm_
 prefix=r"D:\CODE\CCONV RES\csm_mp200_example_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\csm_mp100_50kexample_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\csm100_50kexample_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\csm_mp200_50kexample_bunny\\"
+
+prefix=r"D:\CODE\CCONV RES\csm_mp300_50kexample_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\MM-avary_csm_mp300_50kexample_long2z+2\MM-avary_csm_mp300_50kexample_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\MM-x2-csm100_50kexample_long2z+2\MM-x2-csm100_50kexample_long2z+2\\"
+prefix=r"D:\CODE\CCONV RES\csm_mp200_50kexample_long3\csm_mp200_50kexample_long3\\"
+prefix=r"D:\CODE\CCONV RES\csm100_50kexample_long3\csm100_50kexample_long3\\"
+prefix=r"D:\CODE\CCONV RES\MM-x2-pretrained_model_weights_50kexample_long2z+2\MM-x2-pretrained_model_weights_50kexample_long2z+2\\"
+# prefix=r"D:\CODE\CCONV RES\pretrained_model_weights_50kexample_long3\pretrained_model_weights_50kexample_long3\\"
+prefix=r"D:\CODE\CCONV RES\pretrained_model_weights_50kexample_long2z+2\\"
+
+
+
+
+prefix=r"D:\CODE\CCONV RES\csm_mp300_50kmc_ball_2velx_0602\csm_mp300_50kmc_ball_2velx_0602\\"
 filepre=r"fluid_"
-lv=1
+
+
+
+lv=8
 rv=1000
-prm_exportRGB=1
-prm_exportCurl=0
+prm_step=1
+
+prm_exportRGB=0
+prm_exportCurl=1
 prm_colorcase=1
 
 ti.init(arch=ti.gpu,
-         device_memory_fraction=0.5,
+         device_memory_fraction=0.7,
          debug=False,
          random_seed=int(1234),kernel_profiler=False)
 
@@ -31,7 +53,8 @@ data=0
 # print(avel.shape)
 
 particlenum=0
-particle_max_num=50000
+particle_max_num=150000
+
 
 
 
@@ -62,7 +85,7 @@ m_V.fill(m_V0)
 
 
 import taichi as ti
-def loadfile(filename):
+def loadnpz(filename):
 
     global avel,apos
     global particlenum
@@ -149,6 +172,8 @@ class curlvisual:
             color_base = ti.Vector([0.0, 0.0, 1.0])
             color_vis_curl = ti.Vector([0.0, 0.0, 0.0])
             v_curl = ti.Vector([0.0, 0.0, 0.0])
+
+            #计算结束后结果送入v_curl
             self.for_all_neighbors(
                 p_i, self.compute_particles_color_curl_task, v_curl)
             # self.ps.vorticity_eva[p_i] = v_curl
@@ -162,9 +187,9 @@ obj1=curlvisual()
 
 
 
-for i in range(lv,rv):
+for i in range(lv,rv,prm_step):
 
-    loadfile((prefix+filepre+'{0:04d}'+r".npz").format(i))
+    loadnpz((prefix+filepre+'{0:04d}'+r".npz").format(i))
     
 
 
@@ -175,6 +200,9 @@ for i in range(lv,rv):
                 curlabsn,
                 'curlabs')
     particle_colorn=particle_color.to_numpy()[0:particlenum]
+    # print(particle_colorn.shape)
+    # print('[zxc]')
+    # print(particlenum)
     # print(curlabsn.shape)
     # print(particle_colorn.shape)
     
