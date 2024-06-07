@@ -33,7 +33,7 @@ def plyaddattr(filename, attrarray,attrname):
     v = PlyElement.describe(a, 'vertex')
 
     # Recreate the PlyData instance
-    p = PlyData([v], text=True)
+    p = PlyData([v], text=False)
 
     p.write(filename)
 

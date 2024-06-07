@@ -13,7 +13,7 @@ prm_debug=0
 #导入npy容器，路径写死。
 from sph_base import prm_npyrigid
 
-#挖空容器，npyrigid=1它无效
+#挖空容器，若npyrigid=1，则它无效
 prm_hollowrigid=1
 
 prm_nosim=0
@@ -549,6 +549,8 @@ class ParticleSystem:
     def dump(self, obj_id):
         np_object_id = self.object_id.to_numpy()
         mask = (np_object_id == obj_id).nonzero()
+        #know
+
         np_x = self.x.to_numpy()[mask]
         np_v = self.v.to_numpy()[mask]
         np_color = self.particle_color.to_numpy()[mask]
