@@ -3,10 +3,10 @@ import argparse
 import taichi as ti
 import numpy as np
 from config_builder import SimConfig
-from particle_system import ParticleSystem,prm_fluidmodel,prm_nosim,trans,prm_quickexport
+from particle_system import ParticleSystem,prm_fluidmodel,prm_nosim,trans,prm_quickexport,prm_exportbin
 import time
 
-ti.init(arch=ti.gpu, device_memory_fraction=0.5,debug=False,random_seed=int(time.time()),kernel_profiler=False)
+ti.init(arch=ti.gpu, device_memory_fraction=0.75,debug=False,random_seed=int(time.time()),kernel_profiler=False)
 
 
 
@@ -32,7 +32,9 @@ if __name__ == "__main__":
     if(prm_fluidmodel):
        #prm_
        scene_name="csm_"+str(cconvsceneidx)
-       scene_name="csm_mp_"+str(cconvsceneidx)
+       scene_name="csm_df_"+str(cconvsceneidx)
+
+    #    scene_name="csm_mp_"+str(cconvsceneidx)
 
 
     print('[scene name]\t')
@@ -54,7 +56,7 @@ if __name__ == "__main__":
 
     if(prm_fluidmodel):
         #prm_
-        output_frames=True
+        output_frames=False
         output_ply=True
         output_obj=False
 
@@ -72,7 +74,7 @@ if __name__ == "__main__":
    
     if(prm_fluidmodel):
         #prm_
-        solver.save_velocity=True
+        solver.save_velocity=False
         solver.save_vorticity=False
         solver.save_color=False
 
@@ -153,7 +155,7 @@ if __name__ == "__main__":
         if output_frames:
             if cnt % output_interval == 0:
                 window.save_image(f"{scene_name}_output_img/{cnt:06}.png")
-        
+
         #prm
         if cnt % output_interval == 0:
             if output_ply:
@@ -164,7 +166,10 @@ if __name__ == "__main__":
                 np_pos = obj_data["position"]
                 writer = ti.tools.PLYWriter(num_vertices=ps.object_collection[obj_id]["particleNum"])
                 writer.add_vertex_pos(np_pos[:, 0], np_pos[:, 1], np_pos[:, 2])
-                writer.export_frame_ascii(cnt_ply, series_prefix.format(0))#zxc edit taichi python file
+                if(prm_exportbin):
+                    writer.export_frame      (cnt_ply, series_prefix.format(0))
+                else:
+                    writer.export_frame_ascii(cnt_ply, series_prefix.format(0))#zxc edit taichi python file
 
                 if solver.save_color:
                     np_color = obj_data["color"]
@@ -205,7 +210,6 @@ if __name__ == "__main__":
             cnt += 1
 
         #prm_
-        if(cnt==1000): #lowfluid
-        # if(cnt==2000):
+        if(cnt==1000):
             exit(0)
         window.show()

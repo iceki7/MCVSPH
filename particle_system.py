@@ -21,6 +21,7 @@ prm_nosim=0
 #使用导入的水块模型
 prm_fluidmodel=1
 prm_quickexport=1
+prm_exportbin=1
 
 
 #对于使用cconv制定box和fluidmodel的场景：
