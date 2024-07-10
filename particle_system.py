@@ -20,6 +20,7 @@ prm_nosim=0
 
 #使用导入的水块模型
 prm_fluidmodel=1
+prm_specific=1
 prm_quickexport=1
 prm_exportbin=1
 
@@ -31,6 +32,10 @@ prm_exportbin=1
 
 
 trans=[3.0, 0.2, 1.3]
+
+if(prm_specific):
+    trans=[17,17,17]#grid index 不支持负数
+
 
 
 @ti.data_oriented
@@ -92,6 +97,12 @@ class ParticleSystem:
                 voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
                     r"D:\CODE\MCVSPH-FORK\cconvConfig\csm",idx=cconvsceneidx)
                 particle_num= voxelized_points_np.shape[0]
+
+                if(prm_specific):
+                    voxelized_points_np,voxelized_vel_np= self.load_fluid_model_sp(basedir=
+                        r"D:\CODE\MCVSPH-FORK\cconvConfig\specific\\")
+                    particle_num= voxelized_points_np.shape[0]
+
             fluid["particleNum"] = particle_num
 
             self.object_collection[fluid["objectId"]] = fluid
@@ -404,6 +415,7 @@ class ParticleSystem:
     @ti.func
     def flatten_grid_index(self, grid_index):
         return grid_index[0] * self.grid_num[1] * self.grid_num[2] + grid_index[1] * self.grid_num[2] + grid_index[2]
+        #某个粒子在网格中的3维index计算出它的最终网格是哪个
     
     @ti.func
     def get_flatten_grid_index(self, pos):
@@ -425,10 +437,10 @@ class ParticleSystem:
         for I in ti.grouped(self.grid_particles_num):
             self.grid_particles_num[I] = 0
         for I in ti.grouped(self.x):
-            # print(self.x.shape)
+            
             grid_index = self.get_flatten_grid_index(self.x[I])
             #在粒子重排序的过程中，这是唯一用到坐标的地方，其余的地方都是序号变换
-
+            # print(grid_index)#negative
             self.grid_ids[I] = grid_index
             ti.atomic_add(self.grid_particles_num[grid_index], 1)
         for I in ti.grouped(self.grid_particles_num):
@@ -504,8 +516,23 @@ class ParticleSystem:
                 self.particle_color[I] = self.particle_color_buffer[I]
     
     def initialize_particle_system(self):
+
+        # print('[x]')
+        # x=self.x.to_numpy()
+        # print(x.shape)
+        # print(np.min(x[:,0]))
+        # print(np.max(x[:,0]))
+
+        # print(np.min(x[:,1]))
+        # print(np.max(x[:,1]))
+
+        # print(np.min(x[:,2]))
+        # print(np.max(x[:,2]))
+        # exit(0)
+        
         self.update_grid_id()
         self.prefix_sum_executor.run(self.grid_particles_num)
+        # print('[gpn]\t'+str(self.grid_particles_num))
         #前缀和。  1，2，3转换为1，3，6（即网格中起始粒子的id）
         self.counting_sort()
     
@@ -608,6 +635,17 @@ class ParticleSystem:
         print(f"fluid model num: {voxelized_points_np.shape[0]}")
         
         return voxelized_points_np,voxelized_vels_np
+    def load_fluid_model_sp(self,basedir):
+            # print('idx')
+            # print(idx)
+            # exit(0)
+            voxelized_points_np=np.load((basedir+"/POS"+".npy"))
+            voxelized_vels_np=  np.load((basedir+"/VEL"+".npy"))
+        
+
+            print(f"fluid model num: {voxelized_points_np.shape[0]}")
+            
+            return voxelized_points_np,voxelized_vels_np
 
 
     def load_rigid_body(self, rigid_body):
@@ -618,6 +656,9 @@ class ParticleSystem:
                 cconvboxid = json.load(f)["RigidBodies"][0]["boxid"]
 
             voxelized_points_np=np.load(rigid_body["geometryFile"]+"/Box_"+cconvboxid+".npy")   
+            if(prm_specific):
+                voxelized_points_np=np.load("./cconvConfig/specific/Box.npy")   
+
             print(rigid_body["translation"])
             print(np.max(voxelized_points_np[:,0]))
             print(np.max(voxelized_points_np[:,1]))
@@ -717,6 +758,9 @@ class ParticleSystem:
         if(prm_fluidmodel):
             voxelized_points_np,voxelized_vel_np= self.load_fluid_model(basedir=
                                     r"D:\CODE\MCVSPH-FORK\cconvConfig\csm",idx=self.cconvsceneidx)
+            if(prm_specific):
+                voxelized_points_np,voxelized_vel_np= self.load_fluid_model_sp(basedir=
+                                    r"D:\CODE\MCVSPH-FORK\cconvConfig\specific\\")
             for d in [0,1,2]:
                 voxelized_points_np[:,d]+=trans[d]
             new_positions=voxelized_points_np

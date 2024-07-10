@@ -6,7 +6,7 @@ from config_builder import SimConfig
 from particle_system import ParticleSystem,prm_fluidmodel,prm_nosim,trans,prm_quickexport,prm_exportbin
 import time
 
-ti.init(arch=ti.gpu, device_memory_fraction=0.75,debug=False,random_seed=int(time.time()),kernel_profiler=False)
+ti.init(arch=ti.gpu, device_memory_fraction=0.9,debug=False,random_seed=1234,kernel_profiler=False)
 
 
 
@@ -31,8 +31,13 @@ if __name__ == "__main__":
     scene_name = scene_path.split("\\")[-1].split(".")[0]
     if(prm_fluidmodel):
        #prm_
-       scene_name="csm_"+str(cconvsceneidx)
-       scene_name="csm_df_"+str(cconvsceneidx)
+       
+    #    scene_name="csm_"+str(cconvsceneidx)
+       scene_name="csm_vr_"+str(cconvsceneidx)
+       scene_name="specific_mp_"+str(cconvsceneidx)
+
+
+    #    scene_name="csm_df_"+str(cconvsceneidx)
 
     #    scene_name="csm_mp_"+str(cconvsceneidx)
 

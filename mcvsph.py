@@ -3,14 +3,15 @@ from sph_base import SPHBase
 import numpy as np
 import time
 
+np.random.seed(1234)
 
 @ti.data_oriented
 class MCVSPHSolver(SPHBase):
     def __init__(self, particle_system):
         super().__init__(particle_system)
         #prm_
-        self.save_velocity=True
-        self.save_vorticity=True
+        self.save_velocity=False
+        self.save_vorticity=False
         self.save_color=False
 
         #prm_
@@ -487,6 +488,9 @@ class MCVSPHSolver(SPHBase):
                     vortex_stretching + rot_vis) * self.dt[None]
                 #update delta_omega
                 self.delta_vorticity[p_i] = vorticity_star - curl_v_star
+                #zxc 理想涡度-实际涡度
+
+                
             elif self.ps.material[p_i] == self.ps.material_solid:
                 self.delta_vorticity[p_i].fill(0)
 
