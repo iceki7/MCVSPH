@@ -1,6 +1,7 @@
 import numpy as np
 import taichi as ti
 
+from get1ply import get1ply
 from plyAddAttribute import plyaddRGB, plyaddattr
 
 #prm_
@@ -17,25 +18,32 @@ prefix=r"D:\CODE\CCONV RES\csm100_50kexample_long3\csm100_50kexample_long3\\"
 prefix=r"D:\CODE\CCONV RES\MM-x2-pretrained_model_weights_50kexample_long2z+2\MM-x2-pretrained_model_weights_50kexample_long2z+2\\"
 # prefix=r"D:\CODE\CCONV RES\pretrained_model_weights_50kexample_long3\pretrained_model_weights_50kexample_long3\\"
 prefix=r"D:\CODE\CCONV RES\pretrained_model_weights_50kexample_long2z+2\\"
-
-
-
-
 prefix=r"D:\CODE\CCONV RES\csm_mp300_50kmc_ball_2velx_0602\csm_mp300_50kmc_ball_2velx_0602\\"
+
+
 filepre=r"fluid_"
+# filepre=r"particle_object_0_"
+prm_formatnum=1
 
 
 
-lv=8
-rv=1000
+
+acurlabs=[]
+acurlvar=[]
+
+
+lv=0
+rv=999
 prm_step=1
 
+dt_frame=0.016
 prm_exportRGB=0
 prm_exportCurl=1
 prm_colorcase=1
+prm_loadply=1
 
 ti.init(arch=ti.gpu,
-         device_memory_fraction=0.7,
+         device_memory_fraction=0.9,
          debug=False,
          random_seed=int(1234),kernel_profiler=False)
 
@@ -85,6 +93,32 @@ m_V.fill(m_V0)
 
 
 import taichi as ti
+
+
+
+#COPY
+def loadply(filename,idx):
+
+    global x,v,particlenum
+    
+    if(not prm_formatnum):
+        fn= filename+str(idx)+'.ply'
+        fn1=filename+str(idx+1)+'.ply'
+    else:
+        fn= filename+str('{0:04d}'.format(idx))+'.ply'
+        fn1=filename+str('{0:04d}'.format(idx+1))+'.ply'
+
+    pos0=get1ply(fn)
+    pos1=get1ply(fn1)
+
+
+
+
+    particlenum=pos0.shape[0]
+    x.from_numpy(pos0)
+    v.from_numpy((pos1-pos0)/dt_frame)
+
+
 def loadnpz(filename):
 
     global avel,apos
@@ -188,17 +222,34 @@ obj1=curlvisual()
 
 
 for i in range(lv,rv,prm_step):
+    if(prm_loadply):
+        loadply(prefix+filepre,i)
 
-    loadnpz((prefix+filepre+'{0:04d}'+r".npz").format(i))
+    else:
+        loadnpz((prefix+filepre+'{0:04d}'+r".npz").format(i))
     
 
 
     obj1.compute_particles_color_curl()
     if(prm_exportCurl):
         curlabsn         =obj1.curlabs.to_numpy()[0:particlenum]
-        plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
+        acurlabs.append(np.sum(curlabsn)/particlenum)
+        acurlvar.append(np.var(curlabsn,ddof=1))
+        if(prm_loadply):
+            if(prm_formatnum):
+                fn=(prefix+filepre+'{0:04d}'+r".ply").format(i)
+            else:
+                fn=prefix+filepre+str(i)+r".ply"
+            # print(curlabsn.shape)
+
+            plyaddattr(fn,
                 curlabsn,
                 'curlabs')
+            
+        else:
+            plyaddattr((prefix+filepre+'{0:04d}'+r".ply").format(i),
+                    curlabsn,
+                    'curlabs')
     particle_colorn=particle_color.to_numpy()[0:particlenum]
     # print(particle_colorn.shape)
     # print('[zxc]')
@@ -217,3 +268,6 @@ for i in range(lv,rv,prm_step):
     if(i%20==0):
         print(str(i)+' done')
 print('[all done]')
+#prm
+np.save(prefix+'av_curl_',acurlabs)
+np.save(prefix+'av_curl_var_',acurlvar)
