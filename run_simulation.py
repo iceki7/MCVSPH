@@ -4,6 +4,7 @@ import taichi as ti
 import numpy as np
 from config_builder import SimConfig
 from particle_system import ParticleSystem,prm_fluidmodel,prm_nosim,trans,prm_quickexport,prm_exportbin
+from particle_system import prm_sparse_export,gap
 import time
 
 ti.init(arch=ti.gpu, device_memory_fraction=0.9,debug=False,random_seed=1234,kernel_profiler=False)
@@ -31,14 +32,12 @@ if __name__ == "__main__":
     scene_name = scene_path.split("\\")[-1].split(".")[0]
     if(prm_fluidmodel):
        #prm_
-       
-    #    scene_name="csm_"+str(cconvsceneidx)
-       scene_name="csm_vr_"+str(cconvsceneidx)
-       scene_name="specific_mp_"+str(cconvsceneidx)
-
-
-    #    scene_name="csm_df_"+str(cconvsceneidx)
-
+       scene_name="csm_"+str(cconvsceneidx)
+    #    scene_name="csm_vr_"+str(cconvsceneidx)
+    #    scene_name="specific_mp_"+str(cconvsceneidx)
+    #    scene_name="specific_monte_"+str(cconvsceneidx)
+    #    scene_name="specific_df_"+str(cconvsceneidx)
+    #    scene_name="csm_df_sms_"+str(cconvsceneidx)
     #    scene_name="csm_mp_"+str(cconvsceneidx)
 
 
@@ -52,6 +51,10 @@ if __name__ == "__main__":
     substeps = config.get_cfg("numberOfStepsPerRenderUpdate")
     output_frames = config.get_cfg("exportFrame")
     output_interval = int(0.016 / config.get_cfg("timeStepSize"))
+
+    #prm_
+    # output_interval = int(0.004 / config.get_cfg("timeStepSize"))
+
     output_ply = config.get_cfg("exportPly")
     output_obj = config.get_cfg("exportObj")
     series_prefix = "{}_output/particle_object_{}.ply".format(scene_name, "{}")
@@ -163,6 +166,17 @@ if __name__ == "__main__":
 
         #prm
         if cnt % output_interval == 0:
+
+            #prm swi----------------------sparse
+            # if(prm_sparse_export):
+            #     if(
+            #     (cnt_ply%gap==1 or\
+            #     cnt_ply%gap==2 or\
+            #     cnt_ply%gap==3)):
+                
+                
+                    
+
             if output_ply:
                 obj_id = 0
                 if(prm_fluidmodel):
@@ -209,6 +223,9 @@ if __name__ == "__main__":
                     with open(f"{scene_name}_output/obj_{r_body_id}_{cnt_ply:06}.obj", "w") as f:
                         e = ps.object_collection[r_body_id]["mesh"].export(file_type='obj')
                         f.write(e)
+
+            #prm swi----------------------sparse endif
+
             cnt_ply += 1
 
         if(prm_nosim==0):

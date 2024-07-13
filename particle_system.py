@@ -20,9 +20,13 @@ prm_nosim=0
 
 #使用导入的水块模型
 prm_fluidmodel=1
-prm_specific=1
+prm_specific=0
 prm_quickexport=1
 prm_exportbin=1
+
+#稀疏输出帧(sms数据集)
+prm_sparse_export=0
+gap=24
 
 
 #对于使用cconv制定box和fluidmodel的场景：
