@@ -24,7 +24,7 @@ prefix=r"D:\CODE\CCONV RES\csm_mp300_50kmc_ball_2velx_0602\csm_mp300_50kmc_ball_
 filepre=r"fluid_"
 # filepre=r"particle_object_0_"
 prm_formatnum=1
-
+prm_savevel=0
 
 
 
@@ -103,20 +103,26 @@ def loadply(filename,idx):
     
     if(not prm_formatnum):
         fn= filename+str(idx)+'.ply'
-        fn1=filename+str(idx+1)+'.ply'
+        if(not prm_savevel):
+            fn1=filename+str(idx+1)+'.ply'
     else:
         fn= filename+str('{0:04d}'.format(idx))+'.ply'
-        fn1=filename+str('{0:04d}'.format(idx+1))+'.ply'
+        if(not prm_savevel):
+            fn1=filename+str('{0:04d}'.format(idx+1))+'.ply'
 
     pos0=get1ply(fn)
-    pos1=get1ply(fn1)
+    if(not prm_savevel):
+        pos1=get1ply(fn1)[:0,pos0.shape[0]]
 
 
 
 
     particlenum=pos0.shape[0]
     x.from_numpy(pos0)
-    v.from_numpy((pos1-pos0)/dt_frame)
+    if(prm_savevel):
+        v.from_numpy(np.load(filename+str('{0:04d}'.format(idx))+'.npz')['vel'])
+    else:
+        v.from_numpy((pos1-pos0)/dt_frame)
 
 
 def loadnpz(filename):
