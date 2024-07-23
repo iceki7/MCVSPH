@@ -1,7 +1,9 @@
 
-# velocityRasterize
+#速度场P2G
+
 import taichi as ti
 from plyfile import *
+from tqdm import tqdm
 
 first=1
 
@@ -60,9 +62,9 @@ gridsize=0.8
 # gridsize=0.375
 
 prm_readEnhanceVel=0
-onlyp2g=0
+prm_onlyp2g=1
 # gridsize=0.4;  equalaxis=0
-#gridsize=0.1;   equalaxis=1
+gridsize=0.1;   equalaxis=1
 
 dt_frame=0.016
 
@@ -127,6 +129,8 @@ partneighbornum=  ti.field(dtype=float, shape=particlemaxnum)
 
 gridpos=  ti.Vector.field(dim, dtype=float, shape=gridnum)
 gridvel=  ti.Vector.field(dim, dtype=float, shape=gridnum)
+gridvelnorm=  ti.field(dtype=float, shape=gridnum)
+
 
 
 partpos0=  ti.Vector.field(dim, dtype=float, shape=particlemaxnum)
@@ -214,6 +218,11 @@ class velInterpolate:
             # print('[gridpartnum]')
             # print(gridneighbornum[g_i])
             gridvel[g_i]/=gridneighbornum[g_i]
+            # a=ti.Vector([3,4,12])
+            # print('norm')
+            # print(a.norm())
+            
+            gridvelnorm[g_i]=gridvel[g_i].norm()
             # print(gridvel[g_i])
 
     @ti.kernel
@@ -270,8 +279,8 @@ def loadfile(filename):
     # print(partvel);exit(0)
 
 #prm 
-lv=0
-rv=199
+prm_lv=0
+prm_rv=900
 
 cnt=0
 prefix=r"D:\\CODE\\CCONV RES\\csm_mp300_50kexample_long2z+2\\"
@@ -279,10 +288,9 @@ filepre=r"fluid_"
 
 
 
-
-#将上采样后的细节加入下述模拟中
-prefix2=r"D:\\CODE\\CCONV RES\\pretrained_model_weights_50kexample_long2z+2\\"
-filepre2=r"fluid_"
+# #将上采样后的细节加入下述模拟中
+# prefix2=r"D:\\CODE\\CCONV RES\\pretrained_model_weights_50kexample_long2z+2\\"
+# filepre2=r"fluid_"
 
 
 #
@@ -293,12 +301,46 @@ if(prm_self):
 testname="cubic"
 testname="cubicNoacc"
 
+#截取三维网格的一个截面，绘图，
+def slice(data,slicey=1):
+    print('[slice]')
+    print(data.shape)
+    print(gridnumy)
+    data=data[slicey,:,:]
 
-def quiver(x,y,z,vel):
+
+    plt.imshow(data, cmap='hot', \
+            #    interpolation='none'\
+                interpolation='gaussian',\
+                # extent=(domain_start[0],domain_end[0],\
+                #         domain_start[2],domain_end[2])  
+                 )#know
+    plt.colorbar()
+    # plt.axis("equal")
+    # plt.xlim((domain_start[2],domain_end[2]))
+    # plt.ylim((domain_start[0],domain_end[0]))
+
+    plt.savefig(prefix+'velnorm-'+str(cnt)+'.png')
+    plt.close()
+
+    # plt.show()
+    # exit(0)
+def normalize(X):
+    X_min = X.min()  
+    X_max = X.max()  
+    return (X - X_min) / (X_max - X_min) 
+    
+def quiver(x,y,z,vel,velnorm):
     import matplotlib.pyplot as plt
     import numpy as np
+    # print(vel.shape)#grid num 3
+    # print(velnorm.shape)#grid num
 
-    ax = plt.figure().add_subplot(projection='3d')
+    velnorm=np.reshape(velnorm,x.shape)
+    # velnorm=normalize(velnorm)
+
+    slice(velnorm)
+    # ax = plt.figure().add_subplot(projection='3d')
 
     # print('[quiver]')
     # print(x.shape)
@@ -306,26 +348,28 @@ def quiver(x,y,z,vel):
 
 
     #REF     https://matplotlib.org/3.4.2/gallery/mplot3d/quiver3d.html
-    ax.quiver(x, y, z, np.reshape(vel[:,0],x.shape),\
-                       np.reshape(vel[:,1],x.shape),\
-                       np.reshape(vel[:,2],x.shape),\
-                         length=0.1, normalize=True)
+    # ax.quiver(x, y, z, np.reshape(vel[:,0],x.shape),\
+    #                    np.reshape(vel[:,1],x.shape),\
+    #                    np.reshape(vel[:,2],x.shape),\
+    #                      length=0.1, normalize=True)
+    # ax.set_xlim3d(domain_start[0],domain_end[0])
+    # ax.set_ylim3d(domain_start[1],domain_end[1])
+    # ax.set_zlim3d(domain_start[2],8)
+    # if(equalaxis):
+    #     ax.set_aspect('equal')#know
+    # plt.savefig(prefix+'arrow'+str(cnt)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
+    # plt.close()
+
+    # print(np.sum(np.isnan(velnorm)))
+    velnorm[np.isnan(velnorm)] = 0 
+    # print(np.sum(np.isnan(velnorm)))
+
+    np.save(prefix+"velnorm-"+str(cnt),velnorm)
 
 
-    ax.set_xlim3d(domain_start[0],domain_end[0])
-    ax.set_ylim3d(domain_start[1],domain_end[1])
-    ax.set_zlim3d(domain_start[2],8)
 
 
-    
-    if(equalaxis):
-        ax.set_aspect('equal')
-    plt.savefig('temp'+str(cnt)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
-
-
-    # plt.show()
-
-for i in range(lv,rv+1,1):
+for i in tqdm(range(prm_lv,prm_rv+1,1)):
 
 
     #1、提取速度场
@@ -341,13 +385,15 @@ for i in range(lv,rv+1,1):
     #上采样到网格上 change gridpos
     obj1.velP2G()
     gridvelnp=gridvel.to_numpy()
+    gridvelnormnp=gridvelnorm.to_numpy()
 
-
+    print(np.nanmean(gridvelnormnp))
+    # exit(0)
 
     cnt+=1
-    if(onlyp2g):
-        quiver(X,Y,Z,gridvelnp)
-
+    if(prm_onlyp2g):
+        quiver(X,Y,Z,gridvelnp,velnorm=gridvelnormnp)
+        np.save(prefix+"velg_"+str(i),gridvelnp)
         continue
     
 
@@ -383,11 +429,11 @@ for i in range(lv,rv+1,1):
 
     # print(partpos_.shape)
     # exit(0)
-    np.savez("D:\\CODE\\MCVSPH-FORK\\recoverVel\\"+testname+"{0:04d}.npz".format(i),
+    np.savez("D:\\CODE\\MCVSPH-FORK\\recoveprm_rvel\\"+testname+"{0:04d}.npz".format(i),
              pos=partpos_export_,
              vel=partvel_export_)
     write_ply(
-        path=r"./recoverVel/"+testname,
+        path=r"./recoveprm_rvel/"+testname,
         frame_num=i,
         
         dim=3,
