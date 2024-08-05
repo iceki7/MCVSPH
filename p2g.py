@@ -4,10 +4,12 @@
 import taichi as ti
 from plyfile import *
 from tqdm import tqdm
+from get1ply import get1ply
 
 first=1
 
-def write_ply(path, frame_num,dim, num, pos):
+
+def write_ply(path, frame_num,dim, num, pos,usevel=0,vel=0,replacevel=0):
     if dim == 3:
         list_pos = []
         for i in range(num):
@@ -52,6 +54,10 @@ import matplotlib.pyplot as plt
 
 #prm_------------------------------------
 
+
+
+
+prm_loadnpz=0
 prm_self=0#分解自身
 prm_high=1#高频
 prm_acc=0 #累计矫正
@@ -63,15 +69,59 @@ gridsize=0.8
 
 prm_readEnhanceVel=0
 prm_onlyp2g=1
+gridsize=1;equalaxis=1
 # gridsize=0.4;  equalaxis=0
-gridsize=0.1;   equalaxis=1
+# gridsize=0.1;   equalaxis=1
+gridsize=0.05;   equalaxis=1
+
 
 dt_frame=0.016
 
 particlemaxnum=50000
 dim=3
+
+
+
+
+
+
+prefix=r"D:\\CODE\\CCONV RES\\csm_mp300_50kexample_long2z+2\\"
 domain_start=np.array([-1,  0,      -4.7])
 domain_end=  np.array([1,   2.6,    4])
+slicey=3
+prm_lv=1
+prm_rv=1000
+
+
+
+
+
+prefix=r"D:/CODE/CCONV RES/mix/y0_csm_mp300emit_large/y0_csm_mp300emit_large/"
+domain_start=np.array([-14.4, -4.2,      -2.9,])
+domain_end=  np.array([8.4,   -3.,    2.9,])
+slicey=3
+prm_lv=566
+prm_rv=566
+formatnum=1
+filepre=r"fluid_"
+
+
+
+# prefix=r"D:/CODE/CCONV RES/mix/_csm300_1111_50kmc_ball_2velx_0602/_csm300_1111_50kmc_ball_2velx_0602/"
+# prefix=r"D:/CODE/CCONV RES/mix/_csm_df300_1111_50kmc_ball_2velx_0602/_csm_df300_1111_50kmc_ball_2velx_0602/"
+# prefix=r'D:/CODE/CCONV RES/mix/emin_b_mc_ball_2velx_0602/emin_b_mc_ball_2velx_0602/'
+# # prefix=r'D:/CODE/MCVSPH-FORK/specific_mt_1_output/'
+# # prefix=r'D:/CODE/MCVSPH-FORK/specific_df_1_output/'
+# # prefix=r'D:/CODE/MCVSPH-FORK/specific_mp_1_output/'
+# domain_start=np.array([-17, -4.2,      -0.8,])
+# domain_end=  np.array([8.5,   -2.3,    0.8,])
+# slicey=3
+# prm_lv=1
+# prm_rv=1000
+# formatnum=1
+# # filepre=r"particle_object_0_"
+# filepre=r"fluid_"
+
 
 #--------------------------
 
@@ -119,12 +169,10 @@ def initGridCoord():
     else:
         coord=np.array([XF,YF]).T
 
-    print('[coord shape]')
-    print(coord.shape)
-    # print(coord);exit(0)
+    print('[grid num]'+str(gridnum))
     return coord
 
-gridneighbornum=  ti.field(dtype=float, shape=gridnum)
+gridneighbornum=  ti.field(dtype=int, shape=gridnum)
 partneighbornum=  ti.field(dtype=float, shape=particlemaxnum)
 
 gridpos=  ti.Vector.field(dim, dtype=float, shape=gridnum)
@@ -245,19 +293,48 @@ class velInterpolate:
                         
 
 #覆盖partvel,partpos
-def loadfile(filename):
+def loadfile(filename,idx):
 
     global particlenum_leminar
     global particlenum0
+    global partpos0
 
-
-    data = np.load(filename)
+    if(prm_loadnpz):
+        data = np.load(filename)
 
 
     if(prm_readEnhanceVel):
-        partpos0.from_numpy(data['pos'])
-        partvel0.from_numpy(data['vel'])
-        particlenum0=data['pos'].shape[0]
+
+        if(prm_loadnpz):
+            partpos0.from_numpy(data['pos'])
+            partvel0.from_numpy(data['vel'])
+            particlenum0=data['pos'].shape[0]
+        else:
+            if(formatnum):
+                pos0=get1ply(prefix+filepre+'{0:04d}.ply'.format(idx))#,extraattr='curlabs')
+                pos1=get1ply(prefix+filepre+'{0:04d}.ply'.format(idx+1))#,extraattr='curlabs')
+
+            else:
+                pos0=get1ply(prefix+filepre+str(idx)+'.ply')
+                pos1=get1ply(prefix+filepre+str(idx+1)+'.ply')
+
+            partpos0.from_numpy(pos0)
+            # partpos0.from_numpy(pos0[:,:3])
+
+            partvel0.from_numpy((pos1-pos0)/dt_frame)
+            # partvel0.from_numpy(np.array([pos0[:,3]]).T)
+       
+            particlenum0=pos0.shape[0]
+
+            print('[part vel]')
+            print(np.mean((pos1-pos0)/dt_frame))
+            print(np.max((pos1-pos0)/dt_frame))
+            print(np.min((pos1-pos0)/dt_frame))
+            print('[partnum]\t'+str(pos0.shape))
+
+
+
+       
 
     else:
         particlenum_leminar=data['pos'].shape[0]
@@ -272,19 +349,14 @@ def loadfile(filename):
             partpos_accumulate.from_numpy(data['pos'])
             
 
-    # print(np.average(data['vel']))
-    # exit(0)
- 
-    # print(particlenum);exit(0)
-    # print(partvel);exit(0)
 
 #prm 
-prm_lv=0
-prm_rv=900
+
 
 cnt=0
-prefix=r"D:\\CODE\\CCONV RES\\csm_mp300_50kexample_long2z+2\\"
-filepre=r"fluid_"
+
+
+
 
 
 
@@ -302,69 +374,73 @@ testname="cubic"
 testname="cubicNoacc"
 
 #截取三维网格的一个截面，绘图，
-def slice(data,slicey=1):
-    print('[slice]')
-    print(data.shape)
-    print(gridnumy)
+def slice(data,idx,slicey=1,flt=0):
+    # print(data.shape)
     data=data[slicey,:,:]
-
-
+    data[np.isnan(data)]=0
+    data=data.T
     plt.imshow(data, cmap='hot', \
-            #    interpolation='none'\
-                interpolation='gaussian',\
-                # extent=(domain_start[0],domain_end[0],\
-                #         domain_start[2],domain_end[2])  
-                 )#know
+                # interpolation='gaussian',\
+                vmax=13000,
+                vmin=0,
+                 )
     plt.colorbar()
-    # plt.axis("equal")
-    # plt.xlim((domain_start[2],domain_end[2]))
-    # plt.ylim((domain_start[0],domain_end[0]))
-
-    plt.savefig(prefix+'velnorm-'+str(cnt)+'.png')
+    if(flt==0):
+        plt.savefig(prefix+'slice-'+str(idx)+'-y'+str(slicey)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
+    else:
+        plt.savefig(prefix+'slice-'+str(idx)+'-flt-y'+str(slicey)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
+    
     plt.close()
 
-    # plt.show()
-    # exit(0)
-def normalize(X):
-    X_min = X.min()  
-    X_max = X.max()  
-    return (X - X_min) / (X_max - X_min) 
+
+
     
-def quiver(x,y,z,vel,velnorm):
+def quiver(x,y,z,vel,velnorm,idx):
     import matplotlib.pyplot as plt
     import numpy as np
+    global slicey
     # print(vel.shape)#grid num 3
     # print(velnorm.shape)#grid num
 
     velnorm=np.reshape(velnorm,x.shape)
-    # velnorm=normalize(velnorm)
 
-    slice(velnorm)
-    # ax = plt.figure().add_subplot(projection='3d')
+    if(prm_lv==prm_rv):
+        for ii in range(0,gridnumy):
+            slice(velnorm,idx=idx,slicey=ii)
 
-    # print('[quiver]')
-    # print(x.shape)
-    # print(vel.shape)
+
+
+   
+
+
 
 
     #REF     https://matplotlib.org/3.4.2/gallery/mplot3d/quiver3d.html
-    # ax.quiver(x, y, z, np.reshape(vel[:,0],x.shape),\
-    #                    np.reshape(vel[:,1],x.shape),\
+    #  ax = plt.figure().add_subplot(projection='3d')
+    # ax.quiver(x, z, y, np.reshape(vel[:,0],x.shape),\
     #                    np.reshape(vel[:,2],x.shape),\
+    #                    np.reshape(vel[:,1],x.shape),\
     #                      length=0.1, normalize=True)
     # ax.set_xlim3d(domain_start[0],domain_end[0])
-    # ax.set_ylim3d(domain_start[1],domain_end[1])
-    # ax.set_zlim3d(domain_start[2],8)
+    # ax.set_ylim3d(domain_start[2],domain_end[2])
+    # ax.set_zlim3d(domain_start[1],domain_end[1])
     # if(equalaxis):
     #     ax.set_aspect('equal')#know
-    # plt.savefig(prefix+'arrow'+str(cnt)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
+    # plt.savefig(prefix+'quiver-'+str(idx)+'.png',bbox_inches='tight',pad_inches=0.0, dpi=300)
     # plt.close()
 
-    # print(np.sum(np.isnan(velnorm)))
+   
     velnorm[np.isnan(velnorm)] = 0 
-    # print(np.sum(np.isnan(velnorm)))
+    velnorm[np.isinf(velnorm)] = 0 
 
-    np.save(prefix+"velnorm-"+str(cnt),velnorm)
+    # print(velnorm)
+    print(np.max(velnorm))
+    print('[velnorm mean]'+str(np.mean(velnorm)))
+
+
+    np.save(prefix+"vel-mat-"+str(idx),velnorm)
+    # write_ply(prefix,frame_num=idx,dim=3,num=velnorm.shape[0],pos=velnorm)
+
 
 
 
@@ -375,25 +451,37 @@ for i in tqdm(range(prm_lv,prm_rv+1,1)):
     #1、提取速度场
     prm_readEnhanceVel=1
     #change partvel,partpos
-    loadfile((prefix+filepre+'{0:04d}'+r".npz").format(i))
+    loadfile((prefix+filepre+'{0:04d}'+r".npz").format(i),idx=i)
     # print('l1')
     # print(particlenum)
 
-    print(i)
+
     obj1=velInterpolate()
 
     #上采样到网格上 change gridpos
     obj1.velP2G()
     gridvelnp=gridvel.to_numpy()
     gridvelnormnp=gridvelnorm.to_numpy()
+    gridneighbornumnp=gridneighbornum.to_numpy()
 
-    print(np.nanmean(gridvelnormnp))
-    # exit(0)
+
+    np.save(prefix+"pos-arr"+str(i),gridpos.to_numpy())
+
+
+    
+  
+
+
+    write_ply(path=prefix+"vel3-arr",frame_num=i,dim=3,num=gridvelnp.shape[0],pos=gridvelnp)
+    write_ply(path=prefix+"pos-arr",frame_num=i,dim=3,num=gridpos.to_numpy().shape[0],pos=gridpos.to_numpy())
+
+
+ 
+
 
     cnt+=1
     if(prm_onlyp2g):
-        quiver(X,Y,Z,gridvelnp,velnorm=gridvelnormnp)
-        np.save(prefix+"velg_"+str(i),gridvelnp)
+        quiver(X,Y,Z,gridvelnp,velnorm=gridvelnormnp,idx=i)
         continue
     
 
