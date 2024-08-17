@@ -8,6 +8,8 @@ from get1ply import get1ply
 
 first=1
 
+ #default
+prm_exportvel3=1
 
 def write_ply(path, frame_num,dim, num, pos,usevel=0,vel=0,replacevel=0):
     if dim == 3:
@@ -89,8 +91,10 @@ prefix=r"D:\\CODE\\CCONV RES\\csm_mp300_50kexample_long2z+2\\"
 domain_start=np.array([-1,  0,      -4.7])
 domain_end=  np.array([1,   2.6,    4])
 slicey=3
-prm_lv=1
-prm_rv=1000
+prm_lv=250
+prm_rv=250
+filepre=r"fluid_"
+formatnum=1
 
 
 
@@ -192,8 +196,9 @@ partvel_export =  ti.Vector.field(dim, dtype=float, shape=particlemaxnum)
 partpos_accumulate=  ti.Vector.field(dim, dtype=float, shape=particlemaxnum)
 
 
-
-gridpos.from_numpy(initGridCoord())
+temp=initGridCoord()
+np.save(prefix+"gridpos",temp)
+gridpos.from_numpy(temp)
 
 @ti.data_oriented
 class velInterpolate:
@@ -395,7 +400,7 @@ def slice(data,idx,slicey=1,flt=0):
 
 
     
-def quiver(x,y,z,vel,velnorm,idx):
+def quiver(x,y,z,vel,velnorm,vel3,idx):
     import matplotlib.pyplot as plt
     import numpy as np
     global slicey
@@ -403,6 +408,12 @@ def quiver(x,y,z,vel,velnorm,idx):
     # print(velnorm.shape)#grid num
 
     velnorm=np.reshape(velnorm,x.shape)
+    print(velnorm.shape)
+    print(vel3.shape)
+    if(prm_exportvel3):
+        vel3=np.reshape(vel3,(x.shape[0],x.shape[1],x.shape[2],-1))
+    print('[vel3 sp]'+str(vel3.shape))
+
 
     if(prm_lv==prm_rv):
         for ii in range(0,gridnumy):
@@ -432,6 +443,9 @@ def quiver(x,y,z,vel,velnorm,idx):
    
     velnorm[np.isnan(velnorm)] = 0 
     velnorm[np.isinf(velnorm)] = 0 
+    if(prm_exportvel3):
+        vel3[np.isnan(vel3)] = 0 
+        vel3[np.isinf(vel3)] = 0 
 
     # print(velnorm)
     print(np.max(velnorm))
@@ -439,6 +453,9 @@ def quiver(x,y,z,vel,velnorm,idx):
 
 
     np.save(prefix+"vel-mat-"+str(idx),velnorm)
+    if(prm_exportvel3):
+        np.save(prefix+"vel3-mat-"+str(idx),vel3)
+
     # write_ply(prefix,frame_num=idx,dim=3,num=velnorm.shape[0],pos=velnorm)
 
 
@@ -464,8 +481,8 @@ for i in tqdm(range(prm_lv,prm_rv+1,1)):
     gridvelnormnp=gridvelnorm.to_numpy()
     gridneighbornumnp=gridneighbornum.to_numpy()
 
-
-    np.save(prefix+"pos-arr"+str(i),gridpos.to_numpy())
+    if(i==prm_lv):
+        np.save(prefix+"pos-arr"+str(i),gridpos.to_numpy())
 
 
     
@@ -481,7 +498,7 @@ for i in tqdm(range(prm_lv,prm_rv+1,1)):
 
     cnt+=1
     if(prm_onlyp2g):
-        quiver(X,Y,Z,gridvelnp,velnorm=gridvelnormnp,idx=i)
+        quiver(X,Y,Z,gridvelnp,velnorm=gridvelnormnp,vel3=gridvelnp,idx=i)
         continue
     
 
