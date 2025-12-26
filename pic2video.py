@@ -3,7 +3,8 @@
 # from tqdm import tqdm     # python 进度条库
 
 
-image_folder_dir = r"D:\CODE\MCVSPH-FORK\ball-2_output_img\\"
+image_folder_dir = r"C:\Users\yzx\Documents\CODE\temp-MCVSPH-FORK\ball-2_output_img\\"
+
 # fps = 24     # fps: frame per seconde 每秒帧数，数值可根据需要进行调整
 # size = (640, 360)     # (width, height) 数值可根据需要进行调整
 # fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')     # 编码为 mp4v 格式，注意此处字母为小写，大写会报错
@@ -61,6 +62,25 @@ image_folder_dir = r"D:\CODE\MCVSPH-FORK\ball-2_output_img\\"
 #     video.write(img)
 
 
+def extract_number_from_end(string):
+    # 从字符串末尾开始检查每个字符
+    num_str = ""
+    for char in reversed(string):
+        if char.isdigit():
+            num_str = char + num_str  # 如果是数字，就将其添加到结果字符串前面
+        else:
+            break  # 一旦遇到非数字字符，停止循环
+    return int(num_str) if num_str else None  # 如果没有数字部分，返回None
+
+# 示例
+string = "hello123"
+print(extract_number_from_end("im1"))
+assert(extract_number_from_end("im1")==1)
+assert(extract_number_from_end("im123")==123)
+
+
+
+
 def export1(image_folder_dir,left=0,right=1000,exportname="project.avi"):
 
     import cv2
@@ -68,10 +88,19 @@ def export1(image_folder_dir,left=0,right=1000,exportname="project.avi"):
     import glob
     size=(1024,1024)
     img_array = []
-    for filename in glob.glob(image_folder_dir+'*.png'):
-        id=filename.split("\\")[-1].split(".")[0]
-        # if(int(id)<520 or int(id)>1114):
-        #     continue
+    file_list = sorted(
+        glob.glob(image_folder_dir+'*.png'), 
+        key=lambda x: extract_number_from_end (x.split('\\')[-1].split('.')[0])
+    )
+
+
+    print('all files')
+    for filename in file_list:
+        
+        print(filename)
+        # id=filename.split("\\")[-1].split(".")[0].split("-")[1]
+        print(id)
+   
         img = cv2.imread(filename)
         height, width, layers = img.shape
 
@@ -80,7 +109,10 @@ def export1(image_folder_dir,left=0,right=1000,exportname="project.avi"):
         size = (width,height)
         img_array.append(img)
 
-    fps=15
+    fps=40
+    fps=62.5
+    
+
     out = cv2.VideoWriter(exportname,cv2.VideoWriter_fourcc(*'DIVX'), fps, size)
     
     for i in range(len(img_array)):
@@ -89,9 +121,9 @@ def export1(image_folder_dir,left=0,right=1000,exportname="project.avi"):
     print('[done]')
 
 
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_3_output_img\\",exportname="csm3.avi")
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_4_output_img\\",exportname="csm4.avi")
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_6_output_img\\",exportname="csm6.avi")
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_8_output_img\\",exportname="csm8.avi")
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_9_output_img\\",exportname="csm9.avi")
-export1(image_folder_dir=r"D:\CODE\MCVSPH-FORK\csm_10_output_img\\",exportname="csm10.avi")
+
+
+
+
+export1(image_folder_dir=image_folder_dir, exportname=image_folder_dir+"temp.avi")
+
