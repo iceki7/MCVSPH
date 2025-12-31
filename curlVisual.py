@@ -86,6 +86,7 @@ prefix=r"D:/YZX/Turb Scenes/wave tower static/quanti0.62____period0.75__csm_df30
 # prefix=r"C:/Users/yzx/Documents/CODE/temp-MCVSPH-FORK/sp_mp_0602__300_output/"
 
 # prefix=r"C:\Users\yzx\Downloads\\"
+prefix=r"C:/Users/yzx/Downloads/temp/"
 
 
 filepre=r"fluid_"
@@ -99,19 +100,22 @@ acurlabs=[]
 acurlvar=[]
 
 
+# prm
 lv=0
 rv=3600
 # rv=lv+1
 prm_single=0
 
 prm_step=1
+# prm_step=10
+# prm_step=50
 
 dt_frame=0.016
 prm_exportRGB=0
 
 prmcalcrigidcenter=0
 
-prm_exportCurl=1
+prm_exportCurl=0
 prmvnormxoz=0
 
 prmexportang=0
@@ -127,7 +131,7 @@ ti.init(arch=ti.gpu,
          random_seed=int(1234),kernel_profiler=False)
 
 
-# prefix=r"C:\Users\123\Downloads\lowfluidS100_50kexample_scene\\"
+
 
 # data = np.load(prefix+r"fluid_0955.npz")
 # 通过键名获取数据
