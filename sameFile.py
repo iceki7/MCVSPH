@@ -18,6 +18,7 @@ def delCopy(keepfile,delfile):
     
     x=calculate_file_md5(keepfile)
     y=calculate_file_md5(delfile)
+    print(x)
     if(x==y):
         print('same')
     else:
@@ -25,9 +26,5 @@ def delCopy(keepfile,delfile):
 
 
 
-predir=r"D:\vscode-portable\portapp - zxctemp.json"
-# //支持改名
-# //支持修改内容，可以改过去再改回来
-
-print('[dir]\t'+predir)
-print('[md5]\t'+calculate_file_md5(predir))
+delCopy(r"E:\yzx\文档\mix-copy.hipnc",
+  r"E:\yzx\YZX\Turb Scenes\blender render\render--vex\frozen--mix-copy--cfa40bb3343538b1b0f31165735fc7a7--simplify--.hipnc"      )
